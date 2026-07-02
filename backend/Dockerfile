@@ -6,11 +6,11 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 WORKDIR /app
 COPY package*.json ./
 RUN apt-get update && apt-get install -y python3 make g++ && npm install --omit=dev && apt-get purge -y python3 make g++ && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/dist ./dist
 RUN mkdir -p /app/data
-EXPOSE 3000
+EXPOSE 3030
 CMD ["node", "dist/server.js"]
