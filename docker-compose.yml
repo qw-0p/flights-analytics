@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    volumes:
+      - ./data:/app/data          # sqlite + persisted OAuth token live here
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on: [backend]
+    ports:
+      - "8080:80"                  # nginx serves the SPA, proxies /api -> backend
