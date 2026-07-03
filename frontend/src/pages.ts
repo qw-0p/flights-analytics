@@ -1,12 +1,9 @@
 import type { Component } from 'vue';
 import DayReport from './views/DayReport.vue';
 import Dashboard from './views/Dashboard.vue';
-
-// Єдине джерело для роутів і табів тулбару.
-// Додав сторінку -> з'явилась і в роутері, і в меню.
 export interface PageDef {
-	key: string; // /path без слеша
-	label: string; // напис у табі
+	key: string;
+	label: string;
 	component: Component;
 }
 

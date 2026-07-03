@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, h } from 'vue';
+import { NSelect, NTag } from 'naive-ui';
+import { api, type Filters } from '../api';
 
-// Звітна доба: 19:00 попереднього дня -> 19:00 поточного.
-// baseDate — «кінцева» дата доби (та, на 19:00 якої звіт закривається).
 const baseDate = ref<number>(Date.now());
-
-const window19 = computed(() => {
+const window19 = computed<Filters>(() => {
 	const end = new Date(baseDate.value);
 	end.setHours(19, 0, 0, 0);
 	const start = new Date(end);
@@ -13,7 +12,86 @@ const window19 = computed(() => {
 	return { from: start.toISOString(), to: end.toISOString() };
 });
 
-const fmt = (iso: string) => new Date(iso).toLocaleString();
+const rows = ref<any[]>([]);
+const opts = ref<Record<'loss_zone' | 'reason' | 'reason_desc', string[]>>({
+	loss_zone: [],
+	reason: [],
+	reason_desc: [],
+});
+const loading = ref(false);
+
+const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }));
+
+async function load() {
+	loading.value = true;
+	[rows.value, opts.value] = await Promise.all([
+		api.records(window19.value),
+		api.annOptions(),
+	]);
+	loading.value = false;
+}
+onMounted(load);
+watch(baseDate, load);
+
+const save = (row: any) =>
+	api.saveAnn(row.uuid, {
+		loss_zone: row.loss_zone ?? '',
+		reason: row.reason ?? '',
+		reason_desc: row.reason_desc ?? [],
+	});
+
+// фабрика редагованої комірки-селекта (DRY для J/K/L)
+const cell =
+	(key: 'loss_zone' | 'reason' | 'reason_desc', multiple = false) =>
+	(row: any) =>
+		h(NSelect, {
+			value: row[key],
+			multiple,
+			filterable: true,
+			tag: true,
+			size: 'small',
+			clearable: true,
+			options: toOpts(opts.value[key]),
+			'onUpdate:value': (v: any) => {
+				row[key] = v;
+				save(row);
+			},
+		});
+
+const columns = computed(() => [
+	{ title: 'Розрахунок', key: 'crew', width: 130 },
+	{ title: 'No', key: 'number', width: 50 },
+	{ title: 'Час', key: 'time', width: 60 },
+	{ title: 'Дрон', key: 'dron_type', ellipsis: true },
+	{ title: 'Ціль', key: 'result', ellipsis: true },
+	{
+		title: '±',
+		key: 'success',
+		width: 50,
+		render: (r: any) =>
+			r.success === 1
+				? h(NTag, { type: 'success', size: 'small' }, () => '+')
+				: r.success === 0
+					? h(NTag, { type: 'error', size: 'small' }, () => '−')
+					: '',
+	},
+	{
+		title: 'Зона втрати',
+		key: 'loss_zone',
+		width: 180,
+		render: cell('loss_zone'),
+	},
+	{ title: 'Причина', key: 'reason', width: 160, render: cell('reason') },
+	{
+		title: 'Опис причини',
+		key: 'reason_desc',
+		width: 240,
+		render: cell('reason_desc', true),
+	},
+	{ title: 'DVR', key: 'video', ellipsis: true },
+]);
+
+const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 </script>
 
 <template>
@@ -25,16 +103,20 @@ const fmt = (iso: string) => new Date(iso).toLocaleString();
 				{{ fmt(window19.from) }} — {{ fmt(window19.to) }}
 			</n-text>
 		</n-space>
-
-		<!-- TODO: таблиця аналізу за window19 (тягнемо з /api/... з from/to) -->
-		<n-empty description="Тут буде табличка аналізу за добу" />
+		<n-data-table
+			:columns="columns"
+			:data="rows"
+			:loading="loading"
+			size="small"
+			:scroll-x="1200"
+		/>
 	</div>
 </template>
 
 <style scoped>
 .page {
 	padding: 56px 16px 16px;
-	max-width: 1400px;
+	max-width: 1600px;
 	margin: 0 auto;
 }
 </style>

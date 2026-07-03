@@ -2,21 +2,28 @@ import { ref } from 'vue';
 import { api } from '../api';
 
 const authed = ref(false);
+const email = ref<string | null>(null);
 
 export function useAuth() {
 	async function check() {
 		try {
-			authed.value = (await api.authStatus()).authed;
+			const s = await api.authStatus();
+			authed.value = s.authed;
+			email.value = s.email;
 		} catch {
 			authed.value = false;
+			email.value = null;
 		}
 		return authed.value;
 	}
 	async function login() {
 		window.location.href = await api.authUrl();
 	}
-	function logout() {
+	async function logout() {
+		await api.logout();
 		authed.value = false;
+		email.value = null;
+		location.reload();
 	}
-	return { authed, check, login, logout };
+	return { authed, email, check, login, logout };
 }

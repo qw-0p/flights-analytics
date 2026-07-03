@@ -1,8 +1,8 @@
-import Database from "better-sqlite3";
-import { cfg } from "./config.js";
+import Database from 'better-sqlite3';
+import { cfg } from './config.js';
 
 export const db = new Database(cfg.dbPath);
-db.pragma("journal_mode = WAL");
+db.pragma('journal_mode = WAL');
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS oauth_tokens (
@@ -12,50 +12,74 @@ CREATE TABLE IF NOT EXISTS oauth_tokens (
 );
 
 CREATE TABLE IF NOT EXISTS records (
-  uuid          TEXT PRIMARY KEY,
-  ts            TEXT,            -- ISO datetime (date+time)
-  date          TEXT,
-  time          TEXT,
-  crew          TEXT,
-  dron_type     TEXT,
-  target_name   TEXT,
-  target_no     TEXT,
-  target_id     TEXT,
-  description   TEXT,
-  location      TEXT,
-  ammo1         TEXT,
-  result        TEXT,
-  issue         TEXT,
-  position      TEXT,
-  wounded       INTEGER DEFAULT 0,
-  died          INTEGER DEFAULT 0,
-  frequency     TEXT,
-  coordinates   TEXT,
-  inch          TEXT,
-  video         TEXT,
-  video_confirmed INTEGER DEFAULT 0,
-  craft_name    TEXT,
-  number        TEXT,
-  k1            TEXT,
-  -- derived
-  control_type  TEXT,            -- 'fiber' | 'radio'
-  day_night     TEXT,            -- 'day' | 'night'
-  raw           TEXT
+  uuid        TEXT PRIMARY KEY,
+  number      TEXT,
+  time        TEXT,
+  crew        TEXT,
+  dron_type   TEXT,
+  result      TEXT,            -- J Зона втрати (з логу)
+  video       TEXT,
+  break_dist  TEXT,
+  targets     INTEGER DEFAULT 0,
+  day_night   TEXT,            -- 'day' | 'night'
+  success     INTEGER,         -- 1 | 0 | null
+  raw         TEXT
 );
-CREATE INDEX IF NOT EXISTS idx_records_ts ON records(ts);
 CREATE INDEX IF NOT EXISTS idx_records_crew ON records(crew);
+
+CREATE TABLE IF NOT EXISTS annotations (
+  uuid        TEXT PRIMARY KEY,
+  loss_zone   TEXT,            -- J (ручне перевизначення)
+  reason      TEXT,            -- K
+  reason_desc TEXT,            -- L (JSON-масив)
+  updated_at  TEXT
+);
 `);
 
-export function saveTokens(tokens: object) {
-  db.prepare(
-    `INSERT INTO oauth_tokens (id, tokens, updated_at) VALUES (1, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET tokens = excluded.tokens, updated_at = excluded.updated_at`
-  ).run(JSON.stringify(tokens), new Date().toISOString());
+db.exec(`
+CREATE TABLE IF NOT EXISTS users (
+  email        TEXT PRIMARY KEY,
+  tokens       TEXT NOT NULL,        -- JSON google tokens (з refresh_token)
+  sheet_access INTEGER DEFAULT 0,    -- 1 якщо читає таблицю
+  updated_at   TEXT NOT NULL
+);
+`);
+
+export function saveUser(email: string, tokens: object, sheetAccess: boolean) {
+	const existing = loadUser(email);
+	const merged = { ...(existing?.tokens ?? {}), ...tokens }; // не губимо refresh_token
+	db.prepare(
+		`INSERT INTO users (email, tokens, sheet_access, updated_at)
+     VALUES (@email,@tokens,@sheet_access,@updated_at)
+     ON CONFLICT(email) DO UPDATE SET
+       tokens=excluded.tokens, sheet_access=excluded.sheet_access, updated_at=excluded.updated_at`,
+	).run({
+		email,
+		tokens: JSON.stringify(merged),
+		sheet_access: sheetAccess ? 1 : 0,
+		updated_at: new Date().toISOString(),
+	});
 }
 
-export function loadTokens(): any | null {
-  const row = db.prepare(`SELECT tokens FROM oauth_tokens WHERE id = 1`).get() as
-    | { tokens: string }
-    | undefined;
-  return row ? JSON.parse(row.tokens) : null;
+export function loadUser(
+	email: string,
+): { email: string; tokens: any; sheet_access: number } | null {
+	const row = db
+		.prepare(`SELECT email, tokens, sheet_access FROM users WHERE email=?`)
+		.get(email) as any;
+	return row ? { ...row, tokens: JSON.parse(row.tokens) } : null;
+}
+
+// будь-який дозволений юзер із refresh_token — для фонового sync
+export function anySyncUser(): { email: string; tokens: any } | null {
+	const row = db
+		.prepare(
+			`SELECT email, tokens FROM users WHERE sheet_access=1 ORDER BY updated_at DESC`,
+		)
+		.all() as any[];
+	for (const r of row) {
+		const t = JSON.parse(r.tokens);
+		if (t?.refresh_token) return { email: r.email, tokens: t };
+	}
+	return null;
 }
