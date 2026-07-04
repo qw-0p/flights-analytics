@@ -11,16 +11,15 @@ annRouter.put('/:uuid', (req, res) => {
 		reason_desc = [],
 		break_dist = '',
 		note = '',
-		targets = 0,
 	} = req.body ?? {}
 	db.prepare(
 		`
-    INSERT INTO annotations (uuid, loss_zone, reason, reason_desc, break_dist, note, targets, updated_at)
-    VALUES (@uuid,@loss_zone,@reason,@reason_desc,@break_dist,@note,@targets,@updated_at)
+    INSERT INTO annotations (uuid, loss_zone, reason, reason_desc, break_dist, note, updated_at)
+    VALUES (@uuid,@loss_zone,@reason,@reason_desc,@break_dist,@note,@updated_at)
     ON CONFLICT(uuid) DO UPDATE SET
       loss_zone=excluded.loss_zone, reason=excluded.reason,
       reason_desc=excluded.reason_desc, break_dist=excluded.break_dist,
-      note=excluded.note, targets=excluded.targets, updated_at=excluded.updated_at
+      note=excluded.note, updated_at=excluded.updated_at
   `,
 	).run({
 		uuid: req.params.uuid,
@@ -29,7 +28,6 @@ annRouter.put('/:uuid', (req, res) => {
 		reason_desc: JSON.stringify(reason_desc),
 		break_dist: String(break_dist ?? ''),
 		note: String(note ?? ''),
-		targets: Number(targets) || 0,
 		updated_at: new Date().toISOString(),
 	})
 	res.json({ ok: true })

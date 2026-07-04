@@ -18,6 +18,11 @@ function buildWhere(q: any): { sql: string; params: any[] } {
 	eq('dron_type', q.dronType)
 	eq('day_night', q.dayNight)
 	eq('result', q.result)
+	if (q.controlType === 'fiber') {
+		clauses.push(`r.dron_type LIKE '%оптоволокно%'`)
+	} else if (q.controlType === 'radio') {
+		clauses.push(`r.dron_type NOT LIKE '%оптоволокно%'`)
+	}
 	if (q.success === '1' || q.success === '0') {
 		clauses.push('r.success = ?')
 		params.push(Number(q.success))
@@ -113,14 +118,13 @@ apiRouter.get('/records', (req, res) => {
 	const rows = db
 		.prepare(
 			`
-    SELECT r.uuid, r.crew, r.number, r.time, r.day_night, r.success, r.dron_type, r.craftname, r.result, r.video, r.target,
+    SELECT r.uuid, r.crew, r.position, r.number, r.time, r.day_night, r.success, r.dron_type, r.craftname, r.result, r.video, r.target,
            a.loss_zone, a.reason, COALESCE(a.reason_desc,'[]') AS reason_desc,
            COALESCE(a.break_dist,'') AS break_dist,
-           COALESCE(a.note,'') AS note,
-           COALESCE(a.targets,0) AS targets
+           COALESCE(a.note,'') AS note
     FROM records r
     LEFT JOIN annotations a ON a.uuid = r.uuid
-    ${sql}
+    ${sql ? sql + ' AND' : 'WHERE'} r.dron_type LIKE '%оптоволокно%'
     ORDER BY r.ts
   `,
 		)

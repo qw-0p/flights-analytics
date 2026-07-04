@@ -10,6 +10,7 @@ export const RECORD_COLS = [
 	'time',
 	'ts',
 	'crew',
+	'position',
 	'dron_type',
 	'craftname',
 	'result',
@@ -28,22 +29,6 @@ CREATE TABLE IF NOT EXISTS records (
 CREATE INDEX IF NOT EXISTS idx_records_crew ON records(crew);
 CREATE INDEX IF NOT EXISTS idx_records_ts ON records(ts);
 
-CREATE TABLE IF NOT EXISTS records (
-  uuid        TEXT PRIMARY KEY,
-  number      TEXT,
-  time        TEXT,
-  crew        TEXT,
-  dron_type   TEXT,
-  result      TEXT,            -- J Зона втрати (з логу)
-  video       TEXT,
-  break_dist  TEXT,
-  targets     INTEGER DEFAULT 0,
-  day_night   TEXT,            -- 'day' | 'night'
-  success     INTEGER,         -- 1 | 0 | null
-  raw         TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_records_crew ON records(crew);
-
 CREATE TABLE IF NOT EXISTS annotations (
   uuid        TEXT PRIMARY KEY,
   loss_zone   TEXT,            -- J (ручне перевизначення)
@@ -61,7 +46,6 @@ function ensureColumn(table: string, name: string, decl: string) {
 }
 ensureColumn('records', 'break_dist', 'TEXT')
 ensureColumn('records', 'video', 'TEXT')
-ensureColumn('records', 'targets', 'INTEGER DEFAULT 0')
 ensureColumn('records', 'day_night', 'TEXT')
 ensureColumn('records', 'success', 'INTEGER')
 ensureColumn('records', 'raw', 'TEXT')
@@ -69,7 +53,6 @@ ensureColumn('records', 'ts', 'INTEGER')
 ensureColumn('records', 'craftname', 'TEXT')
 ensureColumn('annotations', 'break_dist', 'TEXT')
 ensureColumn('annotations', 'note', 'TEXT')
-ensureColumn('annotations', 'targets', 'INTEGER DEFAULT 0')
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (

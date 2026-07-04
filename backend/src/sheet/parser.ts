@@ -27,10 +27,6 @@ function getIndexes(headers: any[]): Idx {
 
 const at = (row: any[], i: number) => (i >= 0 && i < row.length ? row[i] : '')
 const str = (v: any) => (v == null ? '' : String(v).trim())
-const num = (v: any) => {
-	const n = parseInt(str(v), 10)
-	return Number.isFinite(n) ? n : 0
-}
 
 const rowKey = (row: any[]) =>
 	createHash('sha1').update(JSON.stringify(row)).digest('hex').slice(0, 16)
@@ -46,8 +42,7 @@ function parseTs(dt: string): number | null {
 }
 
 const dayNight = (dron: string) => (/\bNFPV\b/i.test(dron) ? 'night' : 'day')
-const success = (r: string) =>
-	/неусп/i.test(r) ? 0 : /уражено|успішно/i.test(r) ? 1 : null
+const success = (r: string) => (/неусп/i.test(r) ? 0 : 1)
 const links = (v: string) =>
 	JSON.stringify(
 		str(v)
@@ -76,6 +71,7 @@ export function parseRows(rows: any[][]): Rec[] {
 			time: [date, time].filter(Boolean).join(' '),
 			ts: parseTs([date, time].filter(Boolean).join(' ')),
 			crew,
+			position: str(at(row, idx.position)),
 			dron_type: dron,
 			craftname: str(at(row, idx.craftname)),
 			result: str(at(row, idx.result)),
