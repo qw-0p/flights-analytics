@@ -122,7 +122,11 @@ apiRouter.get('/records', (req, res) => {
 		)
 		.all(...params)
 	res.json(
-		rows.map((r: any) => ({ ...r, reason_desc: JSON.parse(r.reason_desc) })),
+		rows.map((r: any) => ({
+			...r,
+			reason_desc: JSON.parse(r.reason_desc),
+			video: JSON.parse(r.video || '[]'),
+		})),
 	)
 })
 

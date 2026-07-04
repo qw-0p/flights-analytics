@@ -11,7 +11,7 @@ export const cfg = {
 	},
 	sheet: {
 		id: process.env.SHEET_ID ?? '',
-		range: process.env.SHEET_RANGE ?? 'main!A1:Z100000',
+		range: process.env.SHEET_RANGE ?? 'main!A1:AH100000',
 	},
 	syncCron: process.env.SYNC_CRON ?? '*/5 * * * *',
 	dbPath: process.env.DB_PATH ?? './data/app.db',

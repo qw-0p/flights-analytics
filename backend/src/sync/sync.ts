@@ -4,29 +4,12 @@ import { cfg } from '../config.js'
 import { fetchRows } from '../google/sheets.js'
 import { parseRows, type Rec } from '../sheet/parser.js'
 import { isSyncReady } from '../google/oauth.js'
-
+import { RECORD_COLS as COLS } from '../db.js'
 let lastSync: { at: string | null; count: number; error: string | null } = {
 	at: null,
 	count: 0,
 	error: null,
 }
-
-const COLS = [
-	'uuid',
-	'number',
-	'time',
-	'ts',
-	'crew',
-	'dron_type',
-	'craftname',
-	'result',
-	'video',
-	'break_dist',
-	'targets',
-	'day_night',
-	'success',
-	'raw',
-]
 
 const upsert = db.prepare(`
   INSERT INTO records (${COLS.join(',')})

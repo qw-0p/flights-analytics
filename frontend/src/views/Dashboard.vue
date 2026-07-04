@@ -126,7 +126,7 @@ const pieOption = (title: string, data: { name: string; value: number }[]) => ({
 
 const controlPie = computed(() =>
 	pieOption('Керування', [
-		{ name: 'Файбер', value: summary.value.fiber ?? 0 },
+		{ name: 'Оптоволокно', value: summary.value.fiber ?? 0 },
 		{ name: 'Радіо', value: summary.value.radio ?? 0 },
 	]),
 );
@@ -185,7 +185,7 @@ const dayNightPie = computed(() =>
 					<n-select
 						v-model:value="filters.controlType"
 						:options="[
-							{ label: 'Файбер', value: 'fiber' },
+							{ label: 'Оптоволокно', value: 'fiber' },
 							{ label: 'Радіо', value: 'radio' },
 						]"
 						placeholder="Керування"
@@ -251,7 +251,7 @@ const dayNightPie = computed(() =>
 				<n-gi span="6 s:3 m:1">
 					<n-card size="small">
 						<n-statistic
-							label="Файбер/Радіо"
+							label="Оптоволокно/Радіо"
 							:value="`${summary.fiber || 0}/${summary.radio || 0}`"
 						/>
 					</n-card>

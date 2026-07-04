@@ -1,37 +1,39 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, h } from 'vue'
-import { NSelect, NInput, NInputNumber } from 'naive-ui'
-import { api, type Filters } from '../api'
+import { ref, computed, watch, onMounted, h } from 'vue';
+import { NSelect, NInput, NInputNumber, NButton } from 'naive-ui';
+import { api, type Filters } from '../api';
 
-const baseDate = ref<number>(Date.now())
-const window19 = computed<Filters>(() => {
-	const end = new Date(baseDate.value)
-	end.setHours(19, 0, 0, 0)
-	const start = new Date(end)
-	start.setDate(start.getDate() - 1)
-	return { from: start.toISOString(), to: end.toISOString() }
-})
-
-const rows = ref<any[]>([])
+const baseDate = ref<number>(Date.now());
+const window19 = computed(() => {
+	const d = new Date(baseDate.value);
+	const y = d.getFullYear(),
+		m = d.getMonth(),
+		day = d.getDate();
+	const end = new Date(Date.UTC(y, m, day, 16, 0, 0));
+	const start = new Date(end);
+	start.setUTCDate(start.getUTCDate() - 1);
+	return { from: start.toISOString(), to: end.toISOString() };
+});
+const rows = ref<any[]>([]);
 const opts = ref<Record<'loss_zone' | 'reason' | 'reason_desc', string[]>>({
 	loss_zone: [],
 	reason: [],
 	reason_desc: [],
-})
-const loading = ref(false)
+});
+const loading = ref(false);
 
-const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }))
+const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }));
 
 async function load() {
-	loading.value = true
-	;[rows.value, opts.value] = await Promise.all([
+	loading.value = true;
+	[rows.value, opts.value] = await Promise.all([
 		api.records(window19.value),
 		api.annOptions(),
-	])
-	loading.value = false
+	]);
+	loading.value = false;
 }
-onMounted(load)
-watch(baseDate, load)
+onMounted(load);
+watch(baseDate, load);
 
 const save = (row: any) =>
 	api.saveAnn(row.uuid, {
@@ -40,9 +42,9 @@ const save = (row: any) =>
 		reason_desc: row.reason_desc ?? [],
 		break_dist: row.break_dist ?? '',
 		note: row.note ?? '',
-	})
+	});
 
-const crewSecond = (v: string) => (v || '').split(/\s+/)[1] ?? v ?? ''
+const crewSecond = (v: string) => (v || '').split(/\s+/)[1] ?? v ?? '';
 
 // фабрика редагованої комірки-селекта (DRY для J/K/L)
 const cell =
@@ -57,13 +59,13 @@ const cell =
 			clearable: true,
 			options: toOpts(opts.value[key]),
 			'onUpdate:value': (v: any) => {
-				row[key] = v
-				save(row)
+				row[key] = v;
+				save(row);
 			},
-		})
+		});
 
-const splitDate = (t?: string) => (t || '').split(' ')[0] ?? ''
-const splitTime = (t?: string) => (t || '').split(' ')[1] ?? ''
+const splitDate = (t?: string) => (t || '').split(' ')[0] ?? '';
+const splitTime = (t?: string) => (t || '').split(' ')[1] ?? '';
 
 const numCell = (row: any) =>
 	h(NInputNumber, {
@@ -75,10 +77,10 @@ const numCell = (row: any) =>
 		showButton: false,
 		clearable: true,
 		'onUpdate:value': (v: number | null) => {
-			row.break_dist = v == null ? '' : String(v)
-			save(row)
+			row.break_dist = v == null ? '' : String(v);
+			save(row);
 		},
-	})
+	});
 
 const noteCell = (row: any) =>
 	h(NInput, {
@@ -87,10 +89,10 @@ const noteCell = (row: any) =>
 		type: 'text',
 		clearable: true,
 		'onUpdate:value': (v: string) => {
-			row.note = v
+			row.note = v;
 		},
 		onBlur: () => save(row),
-	})
+	});
 
 const columns = computed(() => [
 	{
@@ -119,7 +121,6 @@ const columns = computed(() => [
 		render: (r: any) => splitTime(r.time),
 	},
 	{ title: 'Дрон', key: 'craftname', ellipsis: true },
-	{ title: 'Ціль', key: 'result', ellipsis: true },
 	{
 		title: 'Зона втрати',
 		key: 'loss_zone',
@@ -134,11 +135,45 @@ const columns = computed(() => [
 		render: cell('reason_desc', true),
 	},
 	{ title: 'Обрив', key: 'break_dist', width: 110, render: numCell },
-	{ title: 'DVR', key: 'video', ellipsis: true },
+	{
+		title: 'DVR',
+		key: 'video',
+		width: 140,
+		render: (r: any) => {
+			const urls: string[] = Array.isArray(r.video)
+				? r.video
+				: (() => {
+						try {
+							return JSON.parse(r.video || '[]');
+						} catch {
+							return [];
+						}
+					})();
+			if (!urls.length) return '';
+			return h(
+				'div',
+				{ style: 'display:flex;gap:6px;flex-wrap:wrap' },
+				urls.map((u, i) =>
+					h(
+						NButton,
+						{
+							text: true,
+							tag: 'a',
+							href: u,
+							target: '_blank',
+							size: 'small',
+							type: 'primary',
+						},
+						() => `Відео ${i + 1}`,
+					),
+				),
+			);
+		},
+	},
 	{ title: 'Примітка', key: 'note', width: 240, render: noteCell },
-])
+]);
 
-const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '')
+const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 </script>
 
 <template>
@@ -163,7 +198,6 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '')
 <style scoped>
 .page {
 	padding: 16px;
-	max-width: 1600px;
 	margin: 0 auto;
 }
 </style>
