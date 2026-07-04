@@ -1,39 +1,39 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, h } from 'vue';
-import { NSelect, NInput, NInputNumber, NButton } from 'naive-ui';
-import { api, type Filters } from '../api';
+import { ref, computed, watch, onMounted, h } from 'vue'
+import { NSelect, NInput, NInputNumber, NButton } from 'naive-ui'
+import { api, type Filters } from '../api'
 
-const baseDate = ref<number>(Date.now());
+const baseDate = ref<number>(Date.now())
 const window19 = computed(() => {
-	const d = new Date(baseDate.value);
+	const d = new Date(baseDate.value)
 	const y = d.getFullYear(),
 		m = d.getMonth(),
-		day = d.getDate();
-	const end = new Date(Date.UTC(y, m, day, 16, 0, 0));
-	const start = new Date(end);
-	start.setUTCDate(start.getUTCDate() - 1);
-	return { from: start.toISOString(), to: end.toISOString() };
-});
-const rows = ref<any[]>([]);
+		day = d.getDate()
+	const end = new Date(Date.UTC(y, m, day, 16, 0, 0))
+	const start = new Date(end)
+	start.setUTCDate(start.getUTCDate() - 1)
+	return { from: start.toISOString(), to: end.toISOString() }
+})
+const rows = ref<any[]>([])
 const opts = ref<Record<'loss_zone' | 'reason' | 'reason_desc', string[]>>({
 	loss_zone: [],
 	reason: [],
 	reason_desc: [],
-});
-const loading = ref(false);
+})
+const loading = ref(false)
 
-const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }));
+const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }))
 
 async function load() {
-	loading.value = true;
-	[rows.value, opts.value] = await Promise.all([
+	loading.value = true
+	;[rows.value, opts.value] = await Promise.all([
 		api.records(window19.value),
 		api.annOptions(),
-	]);
-	loading.value = false;
+	])
+	loading.value = false
 }
-onMounted(load);
-watch(baseDate, load);
+onMounted(load)
+watch(baseDate, load)
 
 const save = (row: any) =>
 	api.saveAnn(row.uuid, {
@@ -42,9 +42,10 @@ const save = (row: any) =>
 		reason_desc: row.reason_desc ?? [],
 		break_dist: row.break_dist ?? '',
 		note: row.note ?? '',
-	});
+		targets: row.targets ?? 0,
+	})
 
-const crewSecond = (v: string) => (v || '').split(/\s+/)[1] ?? v ?? '';
+const crewSecond = (v: string) => (v || '').split(/\s+/)[1] ?? v ?? ''
 
 // фабрика редагованої комірки-селекта (DRY для J/K/L)
 const cell =
@@ -59,28 +60,28 @@ const cell =
 			clearable: true,
 			options: toOpts(opts.value[key]),
 			'onUpdate:value': (v: any) => {
-				row[key] = v;
-				save(row);
+				row[key] = v
+				save(row)
 			},
-		});
+		})
 
-const splitDate = (t?: string) => (t || '').split(' ')[0] ?? '';
-const splitTime = (t?: string) => (t || '').split(' ')[1] ?? '';
+const splitDate = (t?: string) => (t || '').split(' ')[0] ?? ''
+const splitTime = (t?: string) => (t || '').split(' ')[1] ?? ''
 
-const numCell = (row: any) =>
+// фабрика числової комірки (DRY: break_dist як текст, targets як число)
+const numCell = (key: 'break_dist' | 'targets') => (row: any) =>
 	h(NInputNumber, {
-		value:
-			row.break_dist === '' || row.break_dist == null
-				? null
-				: Number(row.break_dist),
+		value: row[key] === '' || row[key] == null ? null : Number(row[key]),
 		size: 'small',
 		showButton: false,
 		clearable: true,
+		min: key === 'targets' ? 0 : undefined,
 		'onUpdate:value': (v: number | null) => {
-			row.break_dist = v == null ? '' : String(v);
-			save(row);
+			row[key] =
+				key === 'break_dist' ? (v == null ? '' : String(v)) : v == null ? 0 : v
+			save(row)
 		},
-	});
+	})
 
 const noteCell = (row: any) =>
 	h(NInput, {
@@ -89,10 +90,10 @@ const noteCell = (row: any) =>
 		type: 'text',
 		clearable: true,
 		'onUpdate:value': (v: string) => {
-			row.note = v;
+			row.note = v
 		},
 		onBlur: () => save(row),
-	});
+	})
 
 const columns = computed(() => [
 	{
@@ -121,6 +122,7 @@ const columns = computed(() => [
 		render: (r: any) => splitTime(r.time),
 	},
 	{ title: 'Дрон', key: 'craftname', ellipsis: true },
+	{ title: 'Ціль', key: 'target', ellipsis: true },
 	{
 		title: 'Зона втрати',
 		key: 'loss_zone',
@@ -134,7 +136,12 @@ const columns = computed(() => [
 		width: 240,
 		render: cell('reason_desc', true),
 	},
-	{ title: 'Обрив', key: 'break_dist', width: 110, render: numCell },
+	{
+		title: 'Обрив',
+		key: 'break_dist',
+		width: 110,
+		render: numCell('break_dist'),
+	},
 	{
 		title: 'DVR',
 		key: 'video',
@@ -144,15 +151,15 @@ const columns = computed(() => [
 				? r.video
 				: (() => {
 						try {
-							return JSON.parse(r.video || '[]');
+							return JSON.parse(r.video || '[]')
 						} catch {
-							return [];
+							return []
 						}
-					})();
-			if (!urls.length) return '';
+					})()
+			if (!urls.length) return ''
 			return h(
 				'div',
-				{ style: 'display:flex;gap:6px;flex-wrap:wrap' },
+				{ class: 'dvr' },
 				urls.map((u, i) =>
 					h(
 						NButton,
@@ -167,19 +174,19 @@ const columns = computed(() => [
 						() => `Відео ${i + 1}`,
 					),
 				),
-			);
+			)
 		},
 	},
 	{ title: 'Примітка', key: 'note', width: 240, render: noteCell },
-]);
+])
 
-const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
+const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '')
 </script>
 
 <template>
 	<div class="page">
-		<n-space align="center" style="margin-bottom: 16px">
-			<h2 style="margin: 0">Звіт за добу</h2>
+		<n-space align="center" class="header">
+			<h2 class="title">Звіт за добу</h2>
 			<n-date-picker v-model:value="baseDate" type="date" />
 			<n-text depth="3">
 				{{ fmt(window19.from) }} — {{ fmt(window19.to) }}
@@ -190,7 +197,7 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 			:data="rows"
 			:loading="loading"
 			size="small"
-			:scroll-x="1200"
+			:scroll-x="1300"
 		/>
 	</div>
 </template>
@@ -199,5 +206,16 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 .page {
 	padding: 16px;
 	margin: 0 auto;
+}
+.header {
+	margin-bottom: 16px;
+}
+.title {
+	margin: 0;
+}
+.dvr {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
 }
 </style>

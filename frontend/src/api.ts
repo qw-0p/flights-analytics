@@ -36,4 +36,7 @@ export const api = {
 	saveAnn: (uuid: string, body: any) =>
 		http.put(`/api/annotation/${uuid}`, body).then(r => r.data),
 	logout: () => http.post('/auth/logout').then(r => r.data),
+	getSettings: () => http.get('/api/settings').then(r => r.data),
+	saveSetting: (key: string, items: string[]) =>
+		http.put(`/api/settings/${key}`, { items }).then(r => r.data),
 };

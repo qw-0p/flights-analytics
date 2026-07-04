@@ -11,6 +11,7 @@
     "axios": "^1.7.2",
     "echarts": "^5.5.0",
     "naive-ui": "^2.39.0",
+    "pinia": "^3.0.4",
     "vue": "^3.4.31",
     "vue-echarts": "^7.0.3",
     "vue-router": "^4.4.0"

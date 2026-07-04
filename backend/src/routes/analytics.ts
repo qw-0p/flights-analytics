@@ -65,13 +65,15 @@ apiRouter.get('/summary', (req, res) => {
 			`
     SELECT
       COUNT(*)                          AS flights,
-      COALESCE(SUM(targets),0)          AS targets,
-      SUM(CASE WHEN success=1 THEN 1 ELSE 0 END) AS hits,
-      SUM(CASE WHEN success=0 THEN 1 ELSE 0 END) AS misses,
-      SUM(CASE WHEN day_night='day'   THEN 1 ELSE 0 END) AS day,
-      SUM(CASE WHEN day_night='night' THEN 1 ELSE 0 END) AS night,
-      COUNT(DISTINCT crew)              AS crews
-    FROM records r ${sql}
+      COALESCE(SUM(a.targets),0)        AS targets,
+      SUM(CASE WHEN r.success=1 THEN 1 ELSE 0 END) AS hits,
+      SUM(CASE WHEN r.success=0 THEN 1 ELSE 0 END) AS misses,
+      SUM(CASE WHEN r.day_night='day'   THEN 1 ELSE 0 END) AS day,
+      SUM(CASE WHEN r.day_night='night' THEN 1 ELSE 0 END) AS night,
+      COUNT(DISTINCT r.crew)            AS crews
+    FROM records r
+    LEFT JOIN annotations a ON a.uuid = r.uuid
+    ${sql}
   `,
 		)
 		.get(...params)
@@ -91,12 +93,14 @@ apiRouter.get('/breakdown', (req, res) => {
 	const rows = db
 		.prepare(
 			`
-    SELECT ${col} AS label, COUNT(*) AS value,
-           COALESCE(SUM(targets),0) AS targets,
-           SUM(CASE WHEN success=1 THEN 1 ELSE 0 END) AS hits
-    FROM records r ${sql}
-    ${sql ? 'AND' : 'WHERE'} ${col} <> ''
-    GROUP BY ${col} ORDER BY value DESC LIMIT 50
+    SELECT r.${col} AS label, COUNT(*) AS value,
+           COALESCE(SUM(a.targets),0) AS targets,
+           SUM(CASE WHEN r.success=1 THEN 1 ELSE 0 END) AS hits
+    FROM records r
+    LEFT JOIN annotations a ON a.uuid = r.uuid
+    ${sql}
+    ${sql ? 'AND' : 'WHERE'} r.${col} <> ''
+    GROUP BY r.${col} ORDER BY value DESC LIMIT 50
   `,
 		)
 		.all(...params)
@@ -109,11 +113,11 @@ apiRouter.get('/records', (req, res) => {
 	const rows = db
 		.prepare(
 			`
-    SELECT r.uuid, r.crew, r.number, r.time, r.day_night, r.success,
-           r.dron_type, r.craftname, r.result, r.video,
+    SELECT r.uuid, r.crew, r.number, r.time, r.day_night, r.success, r.dron_type, r.craftname, r.result, r.video, r.target,
            a.loss_zone, a.reason, COALESCE(a.reason_desc,'[]') AS reason_desc,
            COALESCE(a.break_dist,'') AS break_dist,
-           COALESCE(a.note,'') AS note
+           COALESCE(a.note,'') AS note,
+           COALESCE(a.targets,0) AS targets
     FROM records r
     LEFT JOIN annotations a ON a.uuid = r.uuid
     ${sql}

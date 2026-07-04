@@ -8,6 +8,7 @@ import { apiRouter } from './routes/analytics.js';
 import { annRouter } from './routes/annotations.js';
 import { requireAccess } from './middleware/auth.js';
 import { startSyncSchedule } from './sync/sync.js';
+import { settingsRouter } from './routes/settings.js';
 
 const app = express();
 app.use(cors({ origin: cfg.frontendUrl, credentials: true }));
@@ -26,6 +27,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/auth', authRouter);
 app.use('/api', requireAccess, apiRouter);
 app.use('/api/annotation', requireAccess, annRouter);
+app.use('/api/settings', requireAccess, settingsRouter);
 
 app.listen(cfg.port, () => {
 	console.log(`[backend] http://localhost:${cfg.port}`);
