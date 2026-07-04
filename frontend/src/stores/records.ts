@@ -15,14 +15,6 @@ const dayWindow = (base: number) => {
 	return { from: start.toISOString(), to: end.toISOString() }
 }
 
-// нормалізація сирого запису з листа в готовий до відображення
-const norm = (r: any) => ({
-	...r,
-	crew: (r.crew || '').split(/\s+/)[1] ?? r.crew ?? '',
-	date: (r.time || '').split(' ')[0] ?? '',
-	time: (r.time || '').split(' ')[1] ?? '',
-})
-
 export const useRecordsStore = defineStore('records', () => {
 	const baseDate = ref<number>(Date.now())
 	const rows = ref<any[]>([])
@@ -35,10 +27,14 @@ export const useRecordsStore = defineStore('records', () => {
 		loading.value = true
 		const [recs, options] = await Promise.all([
 			api.records(window19.value),
-			api.annOptions(),
+			api.getSettings(),
 		])
 		rows.value = recs.map(norm)
-		opts.value = options
+		opts.value = {
+			loss_zone: options?.loss_zone ?? [],
+			reason: options?.reason ?? [],
+			reason_desc: options?.reason_desc ?? [],
+		}
 		loading.value = false
 	}
 

@@ -36,6 +36,11 @@ CREATE TABLE IF NOT EXISTS annotations (
   reason_desc TEXT,            -- L (JSON-масив)
   updated_at  TEXT
 );
+
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT
+);
 `)
 
 function ensureColumn(table: string, name: string, decl: string) {

@@ -73,16 +73,14 @@ const resultCell = (r: any) =>
 			size: 'medium',
 			type: r.success ? 'success' : 'error',
 		},
-		() => (
-			console.log(typeof r.success),
-			r.day_night === 'night' ? 'Ніч' : 'День'
-		),
+		() => (r.day_night === 'night' ? 'Ніч' : 'День'),
 	)
 const noteCell = (row: any) =>
 	h(NInput, {
 		value: row.note ?? '',
 		size: 'small',
-		type: 'text',
+		type: 'textarea',
+		autosize: { minRows: 1, maxRows: 2 },
 		clearable: true,
 		'onUpdate:value': (v: string) => {
 			row.note = v
@@ -120,7 +118,13 @@ const columns = [
 	},
 	{ title: 'Обрив', key: 'break_dist', width: 90, render: numCell },
 	{ title: 'DVR', key: 'video', width: 120, render: videoCell },
-	{ title: 'Примітка', key: 'note', render: noteCell },
+	{
+		title: 'Примітка',
+		key: 'note',
+		width: 240,
+		resizable: true,
+		render: noteCell,
+	},
 ]
 
 const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '')
