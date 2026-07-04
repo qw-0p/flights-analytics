@@ -3,9 +3,7 @@ services:
     ports: !reset []
     build:
       context: ./backend
-      target: null
 
   frontend:
     build:
       context: ./frontend
-      target: null
