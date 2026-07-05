@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { watch, onMounted, h } from 'vue';
+import { watch, onMounted, h, ref } from 'vue';
 import { NSelect, NInput, NInputNumber, NButton, NTag } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { useRecordsStore } from '../stores/records';
 import { useVideoModal } from '../composables/useVideoModal';
 import VideoModal from '../components/VideoModal.vue';
 import { useAuth } from '../composables/useAuth';
+
+const maxHeight = ref('calc(100vh - 160px)');
 
 const { show } = useVideoModal();
 const { authed, ready, check } = useAuth();
@@ -164,6 +166,7 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 			:loading="loading"
 			size="small"
 			:scroll-x="1600"
+			:max-height="maxHeight"
 		/>
 		<VideoModal />
 	</div>
