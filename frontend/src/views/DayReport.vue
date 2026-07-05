@@ -160,7 +160,7 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 			:data="rows"
 			:loading="loading"
 			size="small"
-			:scroll-x="1650"
+			:scroll-x="1870"
 			:max-height="maxHeight"
 		/>
 		<VideoModal />
