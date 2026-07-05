@@ -135,12 +135,12 @@ const columns = [
 	{
 		title: 'Опис причини',
 		key: 'reason_desc',
-		width: 220,
+		width: 260,
 		render: cell('reason_desc', true),
 	},
 	{ title: 'Обрив', key: 'break_dist', width: 90, render: numCell },
 	{ title: 'DVR', key: 'video', width: 120, render: videoCell },
-	{ title: 'Примітка', key: 'note', width: 240, render: noteCell },
+	{ title: 'Примітка', key: 'note', width: 480, render: noteCell },
 ];
 
 const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
@@ -160,7 +160,7 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 			:data="rows"
 			:loading="loading"
 			size="small"
-			:scroll-x="1870"
+			:scroll-x="2150"
 			:max-height="maxHeight"
 		/>
 		<VideoModal />
