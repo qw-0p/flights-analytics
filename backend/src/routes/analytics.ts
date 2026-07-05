@@ -162,6 +162,7 @@ apiRouter.get('/records', (req, res) => {
 	res.json(
 		rows.map((r: any) => ({
 			...r,
+			loss_zone: r.loss_zone || (Number(r.success) === 1 ? r.result : ''),
 			reason_desc: JSON.parse(r.reason_desc),
 			video: JSON.parse(r.video || '[]'),
 		})),
