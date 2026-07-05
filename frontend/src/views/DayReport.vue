@@ -3,6 +3,10 @@ import { watch, onMounted, h } from 'vue'
 import { NSelect, NInput, NInputNumber, NButton, NTag } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useRecordsStore } from '../stores/records'
+import { useVideoModal } from '../composables/useVideoModal'
+import VideoModal from '../components/VideoModal.vue'
+
+const { show } = useVideoModal()
 
 const store = useRecordsStore()
 const { baseDate, rows, opts, loading, window19 } = storeToRefs(store)
@@ -54,11 +58,9 @@ const videoCell = (r: any) =>
 						NButton,
 						{
 							text: true,
-							tag: 'a',
-							href: u,
-							target: '_blank',
 							size: 'small',
 							type: 'primary',
+							onClick: () => show(u),
 						},
 						() => `Відео ${i + 1}`,
 					),
@@ -145,6 +147,7 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '')
 			:loading="loading"
 			size="small"
 		/>
+		<VideoModal />
 	</div>
 </template>
 
