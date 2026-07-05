@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { watch, onMounted, h } from 'vue'
-import { NSelect, NInput, NInputNumber, NButton, NTag } from 'naive-ui'
-import { storeToRefs } from 'pinia'
-import { useRecordsStore } from '../stores/records'
-import { useVideoModal } from '../composables/useVideoModal'
-import VideoModal from '../components/VideoModal.vue'
-import { useAuth } from '../composables/useAuth'
+import { watch, onMounted, h } from 'vue';
+import { NSelect, NInput, NInputNumber, NButton, NTag } from 'naive-ui';
+import { storeToRefs } from 'pinia';
+import { useRecordsStore } from '../stores/records';
+import { useVideoModal } from '../composables/useVideoModal';
+import VideoModal from '../components/VideoModal.vue';
+import { useAuth } from '../composables/useAuth';
 
-const { show } = useVideoModal()
-const { authed, ready, check } = useAuth()
+const { show } = useVideoModal();
+const { authed, ready, check } = useAuth();
 
-const store = useRecordsStore()
-const { baseDate, rows, opts, loading, window19 } = storeToRefs(store)
+const store = useRecordsStore();
+const { baseDate, rows, opts, loading, window19 } = storeToRefs(store);
 
 onMounted(async () => {
-	if (!ready.value) await check()
-	if (authed.value) store.load()
-})
-watch(baseDate, store.load)
+	if (!ready.value) await check();
+	if (authed.value) store.load();
+});
+watch(baseDate, store.load);
 
-const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }))
+const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }));
 
 const cell =
 	(key: 'loss_zone' | 'reason' | 'reason_desc', multiple = false) =>
@@ -33,10 +33,10 @@ const cell =
 			clearable: true,
 			options: toOpts(opts.value[key]),
 			'onUpdate:value': (v: any) => {
-				row[key] = v
-				store.save(row)
+				row[key] = v;
+				store.save(row);
 			},
-		})
+		});
 
 const numCell = (row: any) =>
 	h(NInputNumber, {
@@ -48,10 +48,10 @@ const numCell = (row: any) =>
 		showButton: false,
 		clearable: true,
 		'onUpdate:value': (v: number | null) => {
-			row.break_dist = v == null ? '' : String(v)
-			store.save(row)
+			row.break_dist = v == null ? '' : String(v);
+			store.save(row);
 		},
-	})
+	});
 
 const videoCell = (r: any) =>
 	r.video.length
@@ -71,7 +71,7 @@ const videoCell = (r: any) =>
 					),
 				),
 			)
-		: ''
+		: '';
 
 const resultCell = (r: any) =>
 	h(
@@ -81,7 +81,7 @@ const resultCell = (r: any) =>
 			type: r.success ? 'success' : 'error',
 		},
 		() => (r.day_night === 'night' ? 'Ніч' : 'День'),
-	)
+	);
 const noteCell = (row: any) =>
 	h(NInput, {
 		value: row.note ?? '',
@@ -90,14 +90,20 @@ const noteCell = (row: any) =>
 		autosize: { minRows: 1, maxRows: 2 },
 		clearable: true,
 		'onUpdate:value': (v: string) => {
-			row.note = v
+			row.note = v;
 		},
 		onBlur: () => store.save(row),
-	})
+	});
 
 const columns = [
-	{ title: '№', key: 'idx', width: 50, render: (_: any, i: number) => i + 1 },
-	{ title: 'Розрахунок', key: 'crew', width: 100 },
+	{
+		title: '№',
+		key: 'idx',
+		width: 50,
+		fixed: 'left',
+		render: (_: any, i: number) => i + 1,
+	},
+	{ title: 'Розрахунок', key: 'crew', width: 100, fixed: 'left' },
 	{
 		title: 'Позиції',
 		key: 'position',
@@ -116,11 +122,17 @@ const columns = [
 		align: 'center',
 		render: resultCell,
 	},
-	{ title: 'Зона втрати', key: 'loss_zone', render: cell('loss_zone') },
-	{ title: 'Причина', key: 'reason', render: cell('reason') },
+	{
+		title: 'Зона втрати',
+		key: 'loss_zone',
+		width: 180,
+		render: cell('loss_zone'),
+	},
+	{ title: 'Причина', key: 'reason', width: 160, render: cell('reason') },
 	{
 		title: 'Опис причини',
 		key: 'reason_desc',
+		width: 220,
 		render: cell('reason_desc', true),
 	},
 	{ title: 'Обрив', key: 'break_dist', width: 90, render: numCell },
@@ -132,9 +144,9 @@ const columns = [
 		resizable: true,
 		render: noteCell,
 	},
-]
+];
 
-const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '')
+const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 </script>
 
 <template>
@@ -151,6 +163,7 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '')
 			:data="rows"
 			:loading="loading"
 			size="small"
+			:scroll-x="1600"
 		/>
 		<VideoModal />
 	</div>
