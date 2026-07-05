@@ -9,7 +9,7 @@ export async function fetchRows(): Promise<any[][]> {
 	const res = await sheets.spreadsheets.values.get({
 		spreadsheetId: cfg.sheet.id,
 		range: cfg.sheet.range,
-		valueRenderOption: 'UNFORMATTED_VALUE',
+		valueRenderOption: 'FORMATTED_VALUE',
 		dateTimeRenderOption: 'FORMATTED_STRING',
 	});
 	return (res.data.values ?? []) as any[][];

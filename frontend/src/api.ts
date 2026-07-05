@@ -38,4 +38,6 @@ export const api = {
 	getSettings: () => http.get('/api/settings').then(r => r.data),
 	saveSetting: (key: string, items: string[]) =>
 		http.put(`/api/settings/${key}`, { items }).then(r => r.data),
+	pivot: (f: Filters) =>
+		http.get('/api/pivot', { params: clean(f) }).then(r => r.data),
 };

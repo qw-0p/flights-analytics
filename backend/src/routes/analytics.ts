@@ -5,6 +5,14 @@ import { isSyncReady } from '../google/oauth.js';
 
 export const apiRouter = Router();
 
+const KYIV_OFFSET = 3 * 3600 * 1000;
+const DAY = 24 * 3600 * 1000;
+const dayKey = (ts: number) => {
+	const shifted = ts + KYIV_OFFSET - 19 * 3600 * 1000;
+	const d = new Date(shifted);
+	return d.toISOString().slice(0, 10);
+};
+
 function buildWhere(q: any): { sql: string; params: any[] } {
 	const clauses: string[] = [];
 	const params: any[] = [];
@@ -149,6 +157,59 @@ apiRouter.get('/records', (req, res) => {
 			video: JSON.parse(r.video || '[]'),
 		})),
 	);
+});
+
+apiRouter.get('/pivot', (req, res) => {
+	const { sql, params } = buildWhere(req.query);
+	const rows = db
+		.prepare(
+			`SELECT r.ts, r.success, r.day_night, a.loss_zone, a.reason
+			 FROM records r
+			 LEFT JOIN annotations a ON a.uuid = r.uuid
+			 ${sql} ORDER BY r.ts`,
+		)
+		.all(...params) as any[];
+
+	const zones = new Set<string>();
+	const reasons = new Set<string>();
+	const days = new Map<string, any>();
+
+	for (const r of rows) {
+		if (r.ts == null) continue;
+		const k = dayKey(Number(r.ts));
+		let d = days.get(k);
+
+		if (!d) {
+			d = {
+				day: k,
+				flights: 0,
+				hits: 0,
+				misses: 0,
+				day_c: 0,
+				night_c: 0,
+				zone: {},
+				reason: {},
+			};
+			days.set(k, d);
+		}
+		d.flights++;
+		Number(r.success) === 1 ? d.hits++ : d.misses++;
+		r.day_night === 'night' ? d.night_c++ : d.day_c++;
+		if (r.loss_zone) {
+			zones.add(r.loss_zone);
+			d.zone[r.loss_zone] = (d.zone[r.loss_zone] || 0) + 1;
+		}
+		if (r.reason) {
+			reasons.add(r.reason);
+			d.reason[r.reason] = (d.reason[r.reason] || 0) + 1;
+		}
+	}
+
+	res.json({
+		zones: [...zones],
+		reasons: [...reasons],
+		days: [...days.values()].sort((a, b) => (a.day < b.day ? 1 : -1)),
+	});
 });
 
 apiRouter.get('/status', (_req, res) =>

@@ -6,6 +6,9 @@ import BreakdownChart from '../components/BreakdownChart.vue';
 import { dayWindow } from '../lib/dayWindow';
 import StatBar from '../components/StatBar.vue';
 import SummaryKpi from '../components/SummaryKpi.vue';
+import PivotTable from '../components/PivotTable.vue';
+
+const view = ref<'charts' | 'table'>('charts');
 
 const msg = useMessage();
 const loading = ref(false);
@@ -113,43 +116,52 @@ onMounted(async () => {
 			</n-space>
 		</n-card>
 
-		<SummaryKpi :filters="filters" />
-		<StatBar :filters="filters" :dims="DIMS" default-dim="loss_zone" />
+		<n-radio-group v-model:value="view" size="small" class="view-switch">
+			<n-radio-button value="charts">Чарти</n-radio-button>
+			<n-radio-button value="table">Таблиця</n-radio-button>
+		</n-radio-group>
 
-		<n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
-			<n-gi span="2 m:1">
-				<BreakdownChart
-					title="Зона втрати"
-					:filters="filters"
-					:dims="DIMS"
-					default-dim="loss_zone"
-				/>
-			</n-gi>
-			<n-gi span="2 m:1">
-				<BreakdownChart
-					title="Причина"
-					:filters="filters"
-					:dims="DIMS"
-					default-dim="reason"
-				/>
-			</n-gi>
-			<n-gi span="2 m:1">
-				<BreakdownChart
-					title="Розрахунок"
-					:filters="filters"
-					:dims="DIMS"
-					default-dim="crew"
-				/>
-			</n-gi>
-			<n-gi span="2 m:1">
-				<BreakdownChart
-					title="Успіх/Неуспіх"
-					:filters="filters"
-					:dims="DIMS"
-					default-dim="success"
-				/>
-			</n-gi>
-		</n-grid>
+		<template v-if="view === 'charts'">
+			<SummaryKpi :filters="filters" />
+			<StatBar :filters="filters" :dims="DIMS" default-dim="loss_zone" />
+
+			<n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+				<n-gi span="2 m:1">
+					<BreakdownChart
+						title="Зона втрати"
+						:filters="filters"
+						:dims="DIMS"
+						default-dim="loss_zone"
+					/>
+				</n-gi>
+				<n-gi span="2 m:1">
+					<BreakdownChart
+						title="Причина"
+						:filters="filters"
+						:dims="DIMS"
+						default-dim="reason"
+					/>
+				</n-gi>
+				<n-gi span="2 m:1">
+					<BreakdownChart
+						title="Розрахунок"
+						:filters="filters"
+						:dims="DIMS"
+						default-dim="crew"
+					/>
+				</n-gi>
+				<n-gi span="2 m:1">
+					<BreakdownChart
+						title="Успіх/Неуспіх"
+						:filters="filters"
+						:dims="DIMS"
+						default-dim="success"
+					/>
+				</n-gi>
+			</n-grid>
+		</template>
+
+		<PivotTable v-else :filters="filters" />
 	</div>
 </template>
 
@@ -169,5 +181,8 @@ onMounted(async () => {
 }
 .f-sel {
 	width: 160px;
+}
+.view-switch {
+	margin-bottom: 16px;
 }
 </style>
