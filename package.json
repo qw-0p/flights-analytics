@@ -1,0 +1,17 @@
+{
+	"name": "flights-analytics",
+	"private": true,
+	"scripts": {
+		"dev": "docker compose up -d",
+		"dev:build": "docker compose up -d --build",
+		"dev:down": "docker compose down",
+		"dev:logs": "docker compose logs -f",
+		"prod": "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d",
+		"prod:build": "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build",
+		"prod:down": "docker compose -f docker-compose.yml -f docker-compose.prod.yml down",
+		"prod:logs": "docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f",
+		"redeploy": "git pull && npm run prod:build",
+		"restart:be": "docker compose restart backend",
+		"restart:fe": "docker compose restart frontend"
+	}
+}

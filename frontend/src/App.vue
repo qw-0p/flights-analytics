@@ -5,7 +5,7 @@ import { useAuth } from './composables/useAuth'
 import AppToolbar from './components/AppToolbar.vue'
 
 const { theme } = useTheme()
-const { check } = useAuth()
+const { check, authed } = useAuth()
 
 onMounted(check)
 </script>
@@ -14,8 +14,8 @@ onMounted(check)
 	<n-config-provider :theme="theme">
 		<n-global-style />
 		<n-message-provider>
-			<n-layout style="min-height: 100vh">
-				<AppToolbar />
+			<n-layout class="root">
+				<AppToolbar v-if="authed" />
 				<n-layout-content content-style="padding: 16px">
 					<router-view />
 				</n-layout-content>
@@ -23,3 +23,8 @@ onMounted(check)
 		</n-message-provider>
 	</n-config-provider>
 </template>
+<style scoped>
+.root {
+	min-height: 100vh;
+}
+</style>

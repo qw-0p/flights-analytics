@@ -7,7 +7,6 @@ export interface Filters {
 	to?: string;
 	crew?: string;
 	dronType?: string;
-	controlType?: string;
 	dayNight?: string;
 	result?: string;
 	location?: string;

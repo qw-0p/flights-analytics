@@ -11,6 +11,7 @@ import { startSyncSchedule } from './sync/sync.js';
 import { settingsRouter } from './routes/settings.js';
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors({ origin: cfg.frontendUrl, credentials: true }));
 app.use(express.json());
 app.use(
@@ -20,6 +21,7 @@ app.use(
 		maxAge: 30 * 24 * 3600 * 1000,
 		sameSite: 'lax',
 		httpOnly: true,
+		secure: cfg.isProd,
 	}),
 );
 

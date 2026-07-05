@@ -1,306 +1,173 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
-import VChart from 'vue-echarts';
+import { reactive, ref, watch, onMounted } from 'vue';
 import { api, type Filters } from '../api';
 import { useMessage } from 'naive-ui';
+import BreakdownChart from '../components/BreakdownChart.vue';
+import { dayWindow } from '../lib/dayWindow';
+import StatBar from '../components/StatBar.vue';
+import SummaryKpi from '../components/SummaryKpi.vue';
 
 const msg = useMessage();
-const authed = ref(true);
 const loading = ref(false);
 const syncInfo = ref<any>(null);
 
 const filters = reactive<Filters>({});
-const opts = reactive<{
-	crew: string[];
-	dronType: string[];
-	result: string[];
-	location: string[];
-}>({ crew: [], dronType: [], result: [], location: [] });
-const dateRange = ref<[number, number] | null>(null);
-
-const summary = ref<any>({});
-const ts = ref<any[]>([]);
-const byCrew = ref<any[]>([]);
-const byResult = ref<any[]>([]);
+const opts = reactive<{ crew: string[]; dronType: string[]; result: string[] }>(
+	{
+		crew: [],
+		dronType: [],
+		result: [],
+	},
+);
+const today = dayWindow(Date.now());
+const dateRange = ref<[number, number] | null>([
+	Date.parse(today.from),
+	Date.parse(today.to),
+]);
 
 const toSelOpts = (arr: string[]) => arr.map(v => ({ label: v, value: v }));
 
-async function checkAuth() {
-	const s = await api.authStatus();
-	authed.value = s.authed;
-}
-async function login() {
-	window.location.href = await api.authUrl();
-}
+const DIMS = [
+	{ label: 'Зона втрати', value: 'loss_zone' },
+	{ label: 'Причина', value: 'reason' },
+	{ label: 'Розрахунок', value: 'crew' },
+	{ label: 'БпЛА', value: 'dron_type' },
+	{ label: 'Успіх', value: 'success' },
+	{ label: 'Час доби', value: 'day_night' },
+];
+
 async function sync() {
 	loading.value = true;
 	syncInfo.value = await api.triggerSync();
 	loading.value = false;
-	if (syncInfo.value.error) msg.error('Sync: ' + syncInfo.value.error);
-	else msg.success(`Синхронізовано: ${syncInfo.value.count}`);
-	await loadAll();
+	syncInfo.value.error
+		? msg.error('Sync: ' + syncInfo.value.error)
+		: msg.success(`Синхронізовано: ${syncInfo.value.count}`);
 }
 
 async function loadFilters() {
-	const f = await api.filters();
-	Object.assign(opts, f);
+	Object.assign(opts, await api.filters());
 }
 
-async function loadAll() {
-	if (dateRange.value) {
-		filters.from = new Date(dateRange.value[0]).toISOString();
-		filters.to = new Date(dateRange.value[1]).toISOString();
-	} else {
-		filters.from = undefined;
-		filters.to = undefined;
-	}
-
-	[summary.value, ts.value, byCrew.value, byResult.value] = await Promise.all([
-		api.summary(filters),
-		api.timeseries(filters),
-		api.breakdown('crew', filters),
-		api.breakdown('result', filters),
-	]);
+function applyRange() {
+	filters.from = dateRange.value
+		? new Date(dateRange.value[0]).toISOString()
+		: undefined;
+	filters.to = dateRange.value
+		? new Date(dateRange.value[1]).toISOString()
+		: undefined;
 }
+watch(dateRange, applyRange);
 
 onMounted(async () => {
-	await checkAuth();
-	if (!authed.value) return;
-	await Promise.all([loadFilters(), loadAll()]);
+	applyRange();
+	await loadFilters();
 	const st = await api.status();
 	syncInfo.value = st.sync;
 });
-
-let t: any;
-watch(filters, () => {
-	clearTimeout(t);
-	t = setTimeout(loadAll, 250);
-});
-watch(dateRange, loadAll);
-
-// --- chart options ---
-const tsOption = computed(() => ({
-	tooltip: { trigger: 'axis' },
-	legend: { data: ['Вильоти', '300', '200'], textStyle: { color: '#ccc' } },
-	grid: { left: 40, right: 20, top: 40, bottom: 60 },
-	dataZoom: [{ type: 'slider' }],
-	xAxis: { type: 'category', data: ts.value.map(r => r.day) },
-	yAxis: { type: 'value' },
-	series: [
-		{
-			name: 'Вильоти',
-			type: 'line',
-			smooth: true,
-			data: ts.value.map(r => r.records),
-		},
-		{ name: '300', type: 'bar', data: ts.value.map(r => r.wounded) },
-		{ name: '200', type: 'bar', data: ts.value.map(r => r.died) },
-	],
-}));
-
-const barOption = (rows: any[], name: string) => ({
-	tooltip: { trigger: 'axis' },
-	grid: { left: 120, right: 20, top: 20, bottom: 30 },
-	xAxis: { type: 'value' },
-	yAxis: {
-		type: 'category',
-		data: rows.map(r => r.label).reverse(),
-		axisLabel: { color: '#ccc' },
-	},
-	series: [{ name, type: 'bar', data: rows.map(r => r.value).reverse() }],
-});
-
-const pieOption = (title: string, data: { name: string; value: number }[]) => ({
-	tooltip: { trigger: 'item' },
-	legend: { bottom: 0, textStyle: { color: '#ccc' } },
-	series: [
-		{
-			name: title,
-			type: 'pie',
-			radius: ['40%', '70%'],
-			data,
-			label: { color: '#ccc' },
-		},
-	],
-});
-
-const controlPie = computed(() =>
-	pieOption('Керування', [
-		{ name: 'Оптоволокно', value: summary.value.fiber ?? 0 },
-		{ name: 'Радіо', value: summary.value.radio ?? 0 },
-	]),
-);
-const dayNightPie = computed(() =>
-	pieOption('Час доби', [
-		{ name: 'День', value: summary.value.day ?? 0 },
-		{ name: 'Ніч', value: summary.value.night ?? 0 },
-	]),
-);
 </script>
 
 <template>
-	<div style="padding: 16px; max-width: 1400px; margin: 0 auto">
-		<n-space justify="space-between" align="center" style="margin-bottom: 16px">
-			<n-space align="center">
-				<n-text depth="3" v-if="syncInfo?.at">
-					останній синк: {{ new Date(syncInfo.at).toLocaleString() }}
-				</n-text>
-				<n-button size="small" :loading="loading" @click="sync">
-					Синхронізувати
-				</n-button>
-			</n-space>
+	<div class="dash">
+		<n-space justify="space-between" align="center" class="topbar">
+			<n-text depth="3" v-if="syncInfo?.at">
+				останній синк: {{ new Date(syncInfo.at).toLocaleString() }}
+			</n-text>
+			<n-button size="small" :loading="loading" @click="sync">
+				Синхронізувати
+			</n-button>
 		</n-space>
 
-		<n-card v-if="!authed">
-			<n-space vertical align="center" style="padding: 40px">
-				<n-text>Потрібен доступ до Google Sheets</n-text>
-				<n-button type="primary" @click="login">Увійти через Google</n-button>
+		<n-card size="small" class="filters">
+			<n-space wrap>
+				<n-date-picker
+					v-model:value="dateRange"
+					type="daterange"
+					clearable
+					class="f-range"
+				/>
+				<n-select
+					v-model:value="filters.crew"
+					:options="toSelOpts(opts.crew)"
+					placeholder="Розрахунок"
+					clearable
+					class="f-sel"
+				/>
+				<n-select
+					v-model:value="filters.dronType"
+					:options="toSelOpts(opts.dronType)"
+					placeholder="БпЛА"
+					clearable
+					class="f-sel"
+				/>
+				<n-select
+					v-model:value="filters.dayNight"
+					:options="[
+						{ label: 'День', value: 'day' },
+						{ label: 'Ніч', value: 'night' },
+					]"
+					placeholder="Час доби"
+					clearable
+					class="f-sel"
+				/>
 			</n-space>
 		</n-card>
 
-		<template v-else>
-			<!-- фільтри -->
-			<n-card size="small" style="margin-bottom: 16px">
-				<n-space wrap>
-					<n-date-picker
-						v-model:value="dateRange"
-						type="daterange"
-						clearable
-						style="width: 300px"
-					/>
-					<n-select
-						v-model:value="filters.crew"
-						:options="toSelOpts(opts.crew)"
-						placeholder="Розрахунок"
-						clearable
-						style="width: 180px"
-					/>
-					<n-select
-						v-model:value="filters.dronType"
-						:options="toSelOpts(opts.dronType)"
-						placeholder="БпЛА"
-						clearable
-						style="width: 150px"
-					/>
-					<n-select
-						v-model:value="filters.controlType"
-						:options="[
-							{ label: 'Оптоволокно', value: 'fiber' },
-							{ label: 'Радіо', value: 'radio' },
-						]"
-						placeholder="Керування"
-						clearable
-						style="width: 140px"
-					/>
-					<n-select
-						v-model:value="filters.dayNight"
-						:options="[
-							{ label: 'День', value: 'day' },
-							{ label: 'Ніч', value: 'night' },
-						]"
-						placeholder="Час доби"
-						clearable
-						style="width: 130px"
-					/>
-					<n-select
-						v-model:value="filters.result"
-						:options="toSelOpts(opts.result)"
-						placeholder="Результат"
-						clearable
-						style="width: 160px"
-					/>
-				</n-space>
-			</n-card>
+		<SummaryKpi :filters="filters" />
+		<StatBar :filters="filters" :dims="DIMS" default-dim="loss_zone" />
 
-			<!-- KPI -->
-			<n-grid
-				:cols="6"
-				:x-gap="12"
-				style="margin-bottom: 16px"
-				responsive="screen"
-				item-responsive
-			>
-				<n-gi span="6 s:3 m:1">
-					<n-card size="small">
-						<n-statistic label="Вильоти" :value="summary.records || 0" />
-					</n-card>
-				</n-gi>
-				<n-gi span="6 s:3 m:1">
-					<n-card size="small">
-						<n-statistic label="200" :value="summary.died || 0" />
-					</n-card>
-				</n-gi>
-				<n-gi span="6 s:3 m:1">
-					<n-card size="small">
-						<n-statistic label="300" :value="summary.wounded || 0" />
-					</n-card>
-				</n-gi>
-				<n-gi span="6 s:3 m:1">
-					<n-card size="small">
-						<n-statistic label="Розрахунків" :value="summary.crews || 0" />
-					</n-card>
-				</n-gi>
-				<n-gi span="6 s:3 m:1">
-					<n-card size="small">
-						<n-statistic
-							label="Відеопідтв."
-							:value="summary.video_confirmed || 0"
-						/>
-					</n-card>
-				</n-gi>
-				<n-gi span="6 s:3 m:1">
-					<n-card size="small">
-						<n-statistic
-							label="Оптоволокно/Радіо"
-							:value="`${summary.fiber || 0}/${summary.radio || 0}`"
-						/>
-					</n-card>
-				</n-gi>
-			</n-grid>
-
-			<!-- таймсерія -->
-			<n-card title="Динаміка по днях" size="small" style="margin-bottom: 16px">
-				<v-chart :option="tsOption" style="height: 320px" autoresize />
-			</n-card>
-
-			<n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
-				<n-gi span="2 m:1">
-					<n-card
-						title="По розрахунках"
-						size="small"
-						style="margin-bottom: 16px"
-					>
-						<v-chart
-							:option="barOption(byCrew, 'Вильоти')"
-							style="height: 300px"
-							autoresize
-						/>
-					</n-card>
-				</n-gi>
-				<n-gi span="2 m:1">
-					<n-card
-						title="По результату"
-						size="small"
-						style="margin-bottom: 16px"
-					>
-						<v-chart
-							:option="barOption(byResult, 'Вильоти')"
-							style="height: 300px"
-							autoresize
-						/>
-					</n-card>
-				</n-gi>
-				<n-gi span="2 m:1">
-					<n-card title="Керування" size="small" style="margin-bottom: 16px">
-						<v-chart :option="controlPie" style="height: 260px" autoresize />
-					</n-card>
-				</n-gi>
-				<n-gi span="2 m:1">
-					<n-card title="Час доби" size="small" style="margin-bottom: 16px">
-						<v-chart :option="dayNightPie" style="height: 260px" autoresize />
-					</n-card>
-				</n-gi>
-			</n-grid>
-		</template>
+		<n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
+			<n-gi span="2 m:1">
+				<BreakdownChart
+					title="Зона втрати"
+					:filters="filters"
+					:dims="DIMS"
+					default-dim="loss_zone"
+				/>
+			</n-gi>
+			<n-gi span="2 m:1">
+				<BreakdownChart
+					title="Причина"
+					:filters="filters"
+					:dims="DIMS"
+					default-dim="reason"
+				/>
+			</n-gi>
+			<n-gi span="2 m:1">
+				<BreakdownChart
+					title="Розрахунок"
+					:filters="filters"
+					:dims="DIMS"
+					default-dim="crew"
+				/>
+			</n-gi>
+			<n-gi span="2 m:1">
+				<BreakdownChart
+					title="Успіх/Неуспіх"
+					:filters="filters"
+					:dims="DIMS"
+					default-dim="success"
+				/>
+			</n-gi>
+		</n-grid>
 	</div>
 </template>
+
+<style scoped>
+.dash {
+	max-width: 1400px;
+	margin: 0 auto;
+}
+.topbar {
+	margin-bottom: 16px;
+}
+.filters {
+	margin-bottom: 16px;
+}
+.f-range {
+	width: 300px;
+}
+.f-sel {
+	width: 160px;
+}
+</style>

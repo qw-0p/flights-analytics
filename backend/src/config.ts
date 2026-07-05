@@ -6,7 +6,7 @@ export const cfg = {
 		clientId: process.env.GOOGLE_CLIENT_ID ?? '',
 		clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
 		get redirectUri() {
-			return `${process.env.BACKEND_URL ?? 'http://localhost:3030'}/auth/callback`
+			return `${process.env.BACKEND_URL ?? 'http://localhost:3030'}/auth/callback`;
 		},
 	},
 	sheet: {
@@ -16,4 +16,5 @@ export const cfg = {
 	syncCron: process.env.SYNC_CRON ?? '*/5 * * * *',
 	dbPath: process.env.DB_PATH ?? './data/app.db',
 	cookieSecret: process.env.COOKIE_SECRET ?? 'change-me-in-env',
-}
+	isProd: process.env.NODE_ENV === 'production',
+};

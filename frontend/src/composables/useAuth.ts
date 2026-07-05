@@ -3,6 +3,7 @@ import { api } from '../api';
 
 const authed = ref(false);
 const email = ref<string | null>(null);
+const ready = ref(false);
 
 export function useAuth() {
 	async function check() {
@@ -14,6 +15,7 @@ export function useAuth() {
 			authed.value = false;
 			email.value = null;
 		}
+		ready.value = true;
 		return authed.value;
 	}
 	async function login() {
@@ -25,5 +27,5 @@ export function useAuth() {
 		email.value = null;
 		location.reload();
 	}
-	return { authed, email, check, login, logout };
+	return { authed, email, ready, check, login, logout };
 }
