@@ -138,6 +138,8 @@ const columns = [
 		width: 220,
 		render: cell('reason_desc', true),
 	},
+	{ title: 'Обрив', key: 'break_dist', width: 90, render: numCell },
+	{ title: 'DVR', key: 'video', width: 120, render: videoCell },
 	{ title: 'Примітка', key: 'note', width: 240, render: noteCell },
 ];
 
