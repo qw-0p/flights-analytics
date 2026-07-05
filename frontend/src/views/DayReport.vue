@@ -5,13 +5,18 @@ import { storeToRefs } from 'pinia'
 import { useRecordsStore } from '../stores/records'
 import { useVideoModal } from '../composables/useVideoModal'
 import VideoModal from '../components/VideoModal.vue'
+import { useAuth } from '../composables/useAuth'
 
 const { show } = useVideoModal()
+const { authed, ready, check } = useAuth()
 
 const store = useRecordsStore()
 const { baseDate, rows, opts, loading, window19 } = storeToRefs(store)
 
-onMounted(store.load)
+onMounted(async () => {
+	if (!ready.value) await check()
+	if (authed.value) store.load()
+})
 watch(baseDate, store.load)
 
 const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }))

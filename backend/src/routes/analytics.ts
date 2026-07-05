@@ -61,9 +61,18 @@ apiRouter.get('/filters', (_req, res) => {
 				)
 				.all() as any[]
 		).map(r => r.v);
+	const distinctDron = () =>
+		(
+			db
+				.prepare(
+					`SELECT DISTINCT dron_type v FROM records
+					 WHERE dron_type LIKE '%оптоволокно%' ORDER BY dron_type`,
+				)
+				.all() as any[]
+		).map(r => r.v);
 	res.json({
 		crew: distinct('crew'),
-		dronType: distinct('dron_type'),
+		dronType: distinctDron(),
 		result: distinct('result'),
 	});
 });
