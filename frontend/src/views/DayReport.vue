@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { watch, onMounted, h, ref } from 'vue';
+import { watch, onMounted, h } from 'vue';
 import { NSelect, NInput, NInputNumber, NButton, NTag } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { useRecordsStore } from '../stores/records';
 import { useVideoModal } from '../composables/useVideoModal';
 import VideoModal from '../components/VideoModal.vue';
 import { useAuth } from '../composables/useAuth';
-
-const maxHeight = ref('calc(100vh - 160px)');
 
 const { show } = useVideoModal();
 const { authed, ready, check } = useAuth();
@@ -137,15 +135,7 @@ const columns = [
 		width: 220,
 		render: cell('reason_desc', true),
 	},
-	{ title: 'Обрив', key: 'break_dist', width: 90, render: numCell },
-	{ title: 'DVR', key: 'video', width: 120, render: videoCell },
-	{
-		title: 'Примітка',
-		key: 'note',
-		width: 240,
-		resizable: true,
-		render: noteCell,
-	},
+	{ title: 'Примітка', key: 'note', width: 240, render: noteCell },
 ];
 
 const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
@@ -166,7 +156,6 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 			:loading="loading"
 			size="small"
 			:scroll-x="1600"
-			:max-height="maxHeight"
 		/>
 		<VideoModal />
 	</div>
