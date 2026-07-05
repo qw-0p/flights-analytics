@@ -160,7 +160,6 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 			size="small"
 			:scroll-x="1650"
 			:max-height="maxHeight"
-			flex-height
 		/>
 		<VideoModal />
 	</div>
