@@ -6,6 +6,9 @@ import { useRecordsStore } from '../stores/records';
 import { useVideoModal } from '../composables/useVideoModal';
 import VideoModal from '../components/VideoModal.vue';
 import { useAuth } from '../composables/useAuth';
+import { ref } from 'vue';
+
+const maxHeight = ref('calc(100vh - 180px)');
 
 const { show } = useVideoModal();
 const { authed, ready, check } = useAuth();
@@ -155,7 +158,9 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 			:data="rows"
 			:loading="loading"
 			size="small"
-			:scroll-x="1600"
+			:scroll-x="1650"
+			:max-height="maxHeight"
+			flex-height
 		/>
 		<VideoModal />
 	</div>
