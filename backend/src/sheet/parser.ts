@@ -12,6 +12,7 @@ const HEADER = {
 	result: 'Результат',
 	issue: 'Проблема',
 	craftname: 'Крафтнейм',
+	key: 'Ключ запису',
 	video: 'Відео',
 } as const;
 
@@ -27,9 +28,6 @@ function getIndexes(headers: any[]): Idx {
 
 const at = (row: any[], i: number) => (i >= 0 && i < row.length ? row[i] : '');
 const str = (v: any) => (v == null ? '' : String(v).trim());
-
-const rowKey = (row: any[]) =>
-	createHash('sha1').update(JSON.stringify(row)).digest('hex').slice(0, 16);
 
 function parseTs(dt: string): number | null {
 	const m = dt.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{1,2}):(\d{2})/);
@@ -69,7 +67,7 @@ export function parseRows(rows: any[][]): Rec[] {
 		const time = str(at(row, idx.time));
 		const dron = str(at(row, idx.dronType));
 		out.push({
-			uuid: rowKey(row),
+			uuid: str(at(row, idx.key)),
 			number: str(at(row, idx.number)),
 			time: [date, time].filter(Boolean).join(' '),
 			ts: parseTs([date, time].filter(Boolean).join(' ')),
