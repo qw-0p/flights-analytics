@@ -215,11 +215,31 @@ apiRouter.get('/pivot', (req, res) => {
 		}
 	}
 
+	const colors = db.prepare(`SELECT day, metric, color FROM cell_colors`).all();
+
 	res.json({
 		zones: [...zones],
 		reasons: [...reasons],
 		days: [...days.values()].sort((a, b) => (a.day < b.day ? 1 : -1)),
+		colors,
 	});
+});
+
+apiRouter.put('/pivot/color', (req, res) => {
+	const { day, metric, color } = req.body ?? {};
+	if (!day || !metric) return res.status(400).json({ error: 'bad' });
+	if (!color) {
+		db.prepare(`DELETE FROM cell_colors WHERE day=? AND metric=?`).run(
+			day,
+			metric,
+		);
+	} else {
+		db.prepare(
+			`INSERT INTO cell_colors (day, metric, color) VALUES (?,?,?)
+			 ON CONFLICT(day, metric) DO UPDATE SET color=excluded.color`,
+		).run(day, metric, color);
+	}
+	res.json({ ok: true });
 });
 
 apiRouter.get('/breakdown-desc', (req, res) => {

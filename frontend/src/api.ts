@@ -42,4 +42,6 @@ export const api = {
 		http.get('/api/pivot', { params: clean(f) }).then(r => r.data),
 	breakdownDesc: (f: Filters) =>
 		http.get('/api/breakdown-desc', { params: clean(f) }).then(r => r.data),
+	setCellColor: (day: string, metric: string, color: string) =>
+		http.put('/api/pivot/color', { day, metric, color }).then(r => r.data),
 };

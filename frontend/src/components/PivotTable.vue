@@ -9,6 +9,7 @@ const zones = ref<string[]>([]);
 const reasons = ref<string[]>([]);
 const days = ref<any[]>([]);
 const loading = ref(false);
+const colors = ref<Record<string, string>>({});
 
 async function load() {
 	loading.value = true;
@@ -17,14 +18,36 @@ async function load() {
 	zones.value = data.zones;
 	reasons.value = data.reasons;
 	days.value = data.days;
+	colors.value = Object.fromEntries(
+		(data.colors ?? []).map((c: any) => [`${c.day}|${c.metric}`, c.color]),
+	);
 	loading.value = false;
 }
-onMounted(load);
-watch(() => props.filters, load, { deep: true });
 
-const pct = (n = 0, t = 0) => (t ? Math.round((n / t) * 100) : 0);
+const PALETTE = ['#2e7d32', '#f9a825', '#ef6c00', '#c62828', ''];
 
-// пара колонок к-ть + % для метрики
+async function cycleColor(day: string, key: string) {
+	const k = `${day}|${key}`;
+	const cur = colors.value[k] ?? '';
+	const next = PALETTE[(PALETTE.indexOf(cur) + 1) % PALETTE.length];
+	next ? (colors.value[k] = next) : delete colors.value[k];
+	colors.value = { ...colors.value };
+	await api.setCellColor(day, key, next);
+}
+
+const colored = (day: string, key: string, content: any) =>
+	h(
+		'div',
+		{
+			class: 'cell',
+			style: colors.value[`${day}|${key}`]
+				? { background: colors.value[`${day}|${key}`], cursor: 'pointer' }
+				: { cursor: 'pointer' },
+			onClick: () => cycleColor(day, key),
+		},
+		content,
+	);
+
 const metric = (
 	title: string,
 	get: (r: any) => number,
@@ -33,7 +56,12 @@ const metric = (
 	title,
 	key: title,
 	children: [
-		{ title: 'к-ть', key: `${title}_c`, width: 60, render: (r: any) => get(r) },
+		{
+			title: 'к-ть',
+			key: `${title}_c`,
+			width: 60,
+			render: (r: any) => colored(r.day, `${title}_c`, get(r)),
+		},
 		{
 			title: '%',
 			key: `${title}_p`,
@@ -42,6 +70,48 @@ const metric = (
 		},
 	],
 });
+
+const summaryRow = computed(() => {
+	const sum = (f: (r: any) => number) =>
+		days.value.reduce((a, r) => a + f(r), 0);
+	const flights = sum(r => r.flights);
+	const cell = (v: number) => ({ value: v });
+	const s: any = { day: { value: 'Разом' }, flights: cell(flights) };
+	const add = (key: string, v: number) => (s[`${key}_c`] = cell(v));
+	add(
+		'Успішні',
+		sum(r => r.hits),
+	);
+	add(
+		'Неуспішні',
+		sum(r => r.misses),
+	);
+	add(
+		'День',
+		sum(r => r.day_c),
+	);
+	add(
+		'Ніч',
+		sum(r => r.night_c),
+	);
+	zones.value.forEach(z =>
+		add(
+			z,
+			sum(r => r.zone[z] || 0),
+		),
+	);
+	reasons.value.forEach(rn =>
+		add(
+			rn,
+			sum(r => r.reason[rn] || 0),
+		),
+	);
+	return s;
+});
+onMounted(load);
+watch(() => props.filters, load, { deep: true });
+
+const pct = (n = 0, t = 0) => (t ? Math.round((n / t) * 100) : 0);
 
 const columns = computed(() => [
 	{ title: 'Доба', key: 'day', width: 120, fixed: 'left' as const },
@@ -93,6 +163,7 @@ const columns = computed(() => [
 		:columns="columns"
 		:data="days"
 		:loading="loading"
+		:summary="() => summaryRow"
 		size="small"
 		:scroll-x="1800"
 		:bordered="true"

@@ -34,6 +34,13 @@ ${RECORD_COLS.map(c =>
 				: `${c} TEXT`,
 ).join(',\n  ')}
 );
+
+CREATE TABLE IF NOT EXISTS cell_colors (
+  day    TEXT NOT NULL,
+  metric TEXT NOT NULL,
+  color  TEXT NOT NULL,
+  PRIMARY KEY (day, metric)
+);
 CREATE INDEX IF NOT EXISTS idx_records_crew ON records(crew);
 CREATE INDEX IF NOT EXISTS idx_records_ts ON records(ts);
 
