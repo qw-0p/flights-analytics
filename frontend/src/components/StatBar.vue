@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import VChart from 'vue-echarts'
-import { api, type Filters } from '../api'
+import { ref, computed, watch, onMounted } from 'vue';
+import VChart from 'vue-echarts';
+import { api, type Filters } from '../api';
 
 const props = defineProps<{
-	filters: Filters
-	dims: { label: string; value: string }[]
-	defaultDim: string
-}>()
+	filters: Filters;
+	dims: { label: string; value: string }[];
+	defaultDim: string;
+}>();
 
-const dim = ref(props.defaultDim)
-const rows = ref<{ label: string; count: number; pct: number }[]>([])
-const total = ref(0)
+const dim = ref(props.defaultDim);
+const rows = ref<{ label: string; count: number; pct: number }[]>([]);
+const total = ref(0);
 
 async function load() {
-	const data = await api.breakdown(dim.value, props.filters)
-	rows.value = data.rows
-	total.value = data.total
+	const data = await api.breakdown(dim.value, props.filters);
+	rows.value = data.rows;
+	total.value = data.total;
 }
-onMounted(load)
-watch(() => [dim.value, props.filters], load, { deep: true })
+onMounted(load);
+watch(() => [dim.value, props.filters], load, { deep: true });
 
 const option = computed(() => ({
 	tooltip: {
@@ -31,10 +31,11 @@ const option = computed(() => ({
 				.map((x: any) => `${x.seriesName}: ${x.value}`)
 				.join('<br/>'),
 	},
-	legend: { bottom: 0, type: 'scroll' },
+	legend: { bottom: 0, type: 'scroll', textStyle: { color: '#e0e0e0' } },
 	grid: { left: 16, right: 16, top: 16, bottom: 48, containLabel: true },
 	xAxis: { type: 'value', max: total.value },
 	yAxis: { type: 'category', data: ['Вильоти'] },
+
 	series: rows.value.map(r => ({
 		name: `${r.label} (${r.pct}%)`,
 		type: 'bar',
@@ -46,7 +47,7 @@ const option = computed(() => ({
 		},
 		data: [r.count],
 	})),
-}))
+}));
 </script>
 
 <template>

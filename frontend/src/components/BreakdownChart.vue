@@ -8,6 +8,7 @@ const props = defineProps<{
 	filters: Filters;
 	dims: { label: string; value: string }[];
 	defaultDim: string;
+	descMode?: boolean;
 }>();
 
 type ChartType = 'bar' | 'pie';
@@ -17,7 +18,9 @@ const rows = ref<{ label: string; count: number; pct: number }[]>([]);
 const total = ref(0);
 
 async function load() {
-	const data = await api.breakdown(dim.value, props.filters);
+	const data = props.descMode
+		? await api.breakdownDesc(props.filters)
+		: await api.breakdown(dim.value, props.filters);
 	rows.value = data.rows;
 	total.value = data.total;
 }
@@ -79,8 +82,9 @@ const option = computed(() =>
 		<template #header-extra>
 			<n-space size="small">
 				<n-select
+					v-if="!descMode"
 					v-model:value="dim"
-					:options="dimOpts"
+					:options="dims"
 					size="small"
 					class="ctrl"
 				/>

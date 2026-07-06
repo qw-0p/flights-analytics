@@ -40,4 +40,6 @@ export const api = {
 		http.put(`/api/settings/${key}`, { items }).then(r => r.data),
 	pivot: (f: Filters) =>
 		http.get('/api/pivot', { params: clean(f) }).then(r => r.data),
+	breakdownDesc: (f: Filters) =>
+		http.get('/api/breakdown-desc', { params: clean(f) }).then(r => r.data),
 };

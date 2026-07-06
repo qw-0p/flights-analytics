@@ -7,6 +7,7 @@ import { dayWindow } from '../lib/dayWindow';
 import StatBar from '../components/StatBar.vue';
 import SummaryKpi from '../components/SummaryKpi.vue';
 import PivotTable from '../components/PivotTable.vue';
+import StatSummaryChart from '../components/StatSummaryChart.vue';
 
 const view = ref<'charts' | 'table'>('charts');
 
@@ -31,11 +32,11 @@ const dateRange = ref<[number, number] | null>([
 const toSelOpts = (arr: string[]) => arr.map(v => ({ label: v, value: v }));
 
 const DIMS = [
+	{ label: 'Успіх', value: 'success' },
 	{ label: 'Зона втрати', value: 'loss_zone' },
 	{ label: 'Причина', value: 'reason' },
 	{ label: 'Розрахунок', value: 'crew' },
-	{ label: 'БпЛА', value: 'dron_type' },
-	{ label: 'Успіх', value: 'success' },
+	{ label: 'Дрон', value: 'craftname' },
 	{ label: 'Час доби', value: 'day_night' },
 ];
 
@@ -123,6 +124,7 @@ onMounted(async () => {
 
 		<template v-if="view === 'charts'">
 			<SummaryKpi :filters="filters" />
+			<StatSummaryChart :filters="filters" />
 			<StatBar :filters="filters" :dims="DIMS" default-dim="loss_zone" />
 
 			<n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
@@ -156,6 +158,31 @@ onMounted(async () => {
 						:filters="filters"
 						:dims="DIMS"
 						default-dim="success"
+					/>
+				</n-gi>
+				<n-gi span="2 m:1">
+					<BreakdownChart
+						title="Дрони — день"
+						:filters="{ ...filters, dayNight: 'day' }"
+						:dims="DIMS"
+						default-dim="craftname"
+					/>
+				</n-gi>
+				<n-gi span="2 m:1">
+					<BreakdownChart
+						title="Дрони — ніч"
+						:filters="{ ...filters, dayNight: 'night' }"
+						:dims="DIMS"
+						default-dim="craftname"
+					/>
+				</n-gi>
+				<n-gi span="2 m:1">
+					<BreakdownChart
+						title="Опис причин"
+						:filters="filters"
+						:dims="DIMS"
+						default-dim="reason_desc"
+						desc-mode
 					/>
 				</n-gi>
 			</n-grid>

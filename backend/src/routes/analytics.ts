@@ -6,7 +6,6 @@ import { isSyncReady } from '../google/oauth.js';
 export const apiRouter = Router();
 
 const KYIV_OFFSET = 3 * 3600 * 1000;
-const DAY = 24 * 3600 * 1000;
 const dayKey = (ts: number) => {
 	const shifted = ts + KYIV_OFFSET - 19 * 3600 * 1000;
 	const d = new Date(shifted);
@@ -101,6 +100,7 @@ apiRouter.get('/summary', (req, res) => {
 });
 const DIM_COL: Record<string, { table: 'r' | 'a'; col: string }> = {
 	crew: { table: 'r', col: 'crew' },
+	craftname: { table: 'r', col: 'craftname' },
 	dron_type: { table: 'r', col: 'dron_type' },
 	day_night: { table: 'r', col: 'day_night' },
 	success: { table: 'r', col: 'success' },
@@ -219,6 +219,39 @@ apiRouter.get('/pivot', (req, res) => {
 		zones: [...zones],
 		reasons: [...reasons],
 		days: [...days.values()].sort((a, b) => (a.day < b.day ? 1 : -1)),
+	});
+});
+
+apiRouter.get('/breakdown-desc', (req, res) => {
+	const { sql, params } = buildWhere(req.query);
+	const rows = db
+		.prepare(
+			`SELECT a.reason_desc AS d FROM records r
+			 LEFT JOIN annotations a ON a.uuid = r.uuid
+			 ${sql ? sql + ' AND' : 'WHERE'} a.reason_desc <> '' AND a.reason_desc <> '[]'`,
+		)
+		.all(...params) as { d: string }[];
+
+	const total = (
+		db.prepare(`SELECT COUNT(*) c FROM records r ${sql}`).get(...params) as any
+	).c as number;
+
+	const counts = new Map<string, number>();
+	for (const { d } of rows) {
+		try {
+			for (const x of JSON.parse(d)) counts.set(x, (counts.get(x) || 0) + 1);
+		} catch {}
+	}
+
+	res.json({
+		total,
+		rows: [...counts.entries()]
+			.map(([label, count]) => ({
+				label,
+				count,
+				pct: total ? Math.round((count / total) * 1000) / 10 : 0,
+			}))
+			.sort((a, b) => b.count - a.count),
 	});
 });
 
