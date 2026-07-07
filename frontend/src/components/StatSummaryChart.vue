@@ -22,19 +22,16 @@ const bars = computed(() => {
 			label: 'Успішні',
 			value: d.hits ?? 0,
 			color: '#3fb950',
-			sub: pct(d.hits, d.flights),
 		},
 		{
 			label: 'Неуспішні',
 			value: d.misses ?? 0,
 			color: '#3fa7d6',
-			sub: pct(d.misses, d.flights),
 		},
 		{
 			label: 'День',
 			value: d.day ?? 0,
 			color: '#e3c000',
-			sub: pct(d.day, d.flights),
 		},
 		{
 			label: 'Успішні день',
@@ -52,7 +49,6 @@ const bars = computed(() => {
 			label: 'Ніч',
 			value: d.night ?? 0,
 			color: '#555',
-			sub: pct(d.night, d.flights),
 		},
 		{
 			label: 'Успішні ніч',

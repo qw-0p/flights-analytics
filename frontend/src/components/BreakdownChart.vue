@@ -2,11 +2,12 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import VChart from 'vue-echarts';
 import { api, type Filters } from '../api';
+import { useThemeVars } from 'naive-ui';
 
+const theme = useThemeVars();
 const props = defineProps<{
 	title: string;
 	filters: Filters;
-	dims: { label: string; value: string }[];
 	defaultDim: string;
 	descMode?: boolean;
 	exclude?: string[];
@@ -14,7 +15,7 @@ const props = defineProps<{
 
 type ChartType = 'bar' | 'pie';
 const dim = ref(props.defaultDim);
-const type = ref<ChartType>('bar');
+const type = ref<ChartType>('pie');
 const rows = ref<{ label: string; count: number; pct: number }[]>([]);
 const total = ref(0);
 
@@ -28,7 +29,6 @@ async function load() {
 onMounted(load);
 watch(() => [dim.value, props.filters], load, { deep: true });
 
-const dimOpts = props.dims;
 const typeOpts = [
 	{ label: 'Стовпці', value: 'bar' },
 	{ label: 'Кругова', value: 'pie' },
@@ -41,7 +41,8 @@ const option = computed(() =>
 					trigger: 'item',
 					formatter: '{b}: {c} ({d}%)',
 				},
-				legend: { bottom: 0 },
+				legend: { bottom: 0, textStyle: { color: theme.value.textColor2 } },
+				label: { color: theme.value.textColor2, textBorderWidth: 0 },
 				series: [
 					{
 						type: 'pie',
@@ -82,13 +83,6 @@ const option = computed(() =>
 	<n-card :title="title" size="small" class="chart-card">
 		<template #header-extra>
 			<n-space size="small">
-				<n-select
-					v-if="!descMode"
-					v-model:value="dim"
-					:options="dims"
-					size="small"
-					class="ctrl"
-				/>
 				<n-select
 					v-model:value="type"
 					:options="typeOpts"
