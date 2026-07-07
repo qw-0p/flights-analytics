@@ -29,6 +29,7 @@ const dateRange = ref<[number, number] | null>([
 	Date.parse(today.from),
 	Date.parse(today.to),
 ]);
+applyRange();
 
 const toSelOpts = (arr: string[]) => arr.map(v => ({ label: v, value: v }));
 
@@ -65,7 +66,6 @@ function applyRange() {
 watch(dateRange, applyRange);
 
 onMounted(async () => {
-	applyRange();
 	await loadFilters();
 	const st = await api.status();
 	syncInfo.value = st.sync;
