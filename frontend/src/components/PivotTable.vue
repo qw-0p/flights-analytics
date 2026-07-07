@@ -70,44 +70,6 @@ const metric = (
 		},
 	],
 });
-
-const summaryRow = computed(() => {
-	const sum = (f: (r: any) => number) =>
-		days.value.reduce((a, r) => a + f(r), 0);
-	const flights = sum(r => r.flights);
-	const cell = (v: number) => ({ value: v });
-	const s: any = { day: { value: 'Разом' }, flights: cell(flights) };
-	const add = (key: string, v: number) => (s[`${key}_c`] = cell(v));
-	add(
-		'Успішні',
-		sum(r => r.hits),
-	);
-	add(
-		'Неуспішні',
-		sum(r => r.misses),
-	);
-	add(
-		'День',
-		sum(r => r.day_c),
-	);
-	add(
-		'Ніч',
-		sum(r => r.night_c),
-	);
-	zones.value.forEach(z =>
-		add(
-			z,
-			sum(r => r.zone[z] || 0),
-		),
-	);
-	reasons.value.forEach(rn =>
-		add(
-			rn,
-			sum(r => r.reason[rn] || 0),
-		),
-	);
-	return s;
-});
 onMounted(load);
 watch(() => props.filters, load, { deep: true });
 
@@ -166,23 +128,22 @@ const maxHeight = ref('calc(100vh - 300px)');
 </script>
 
 <template>
-	<div class="page">
-		<n-data-table
-			:columns="columns"
-			:data="days"
-			:loading="loading"
-			:scroll-x="scrollX"
-			:max-height="maxHeight"
-			size="small"
-			:bordered="true"
-			:single-line="false"
-		/>
-	</div>
+	<n-data-table
+		class="pivot-table"
+		:columns="columns"
+		:data="days"
+		:loading="loading"
+		:scroll-x="scrollX"
+		:max-height="maxHeight"
+		size="small"
+		:bordered="true"
+		:single-line="false"
+		:flex-height="true"
+	/>
 </template>
 
 <style scoped>
-.page {
-	padding: 16px;
-	margin: 0 auto;
+.pivot-table {
+	height: 100%;
 }
 </style>

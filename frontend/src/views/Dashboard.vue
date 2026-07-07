@@ -192,11 +192,11 @@ onMounted(async () => {
 <style scoped>
 .dash {
 	padding: 0 16px;
-
 	margin: 0 auto;
 }
 .page {
 	padding: 16px;
+	height: calc(100vh - 230px);
 }
 .topbar {
 	margin-bottom: 16px;
