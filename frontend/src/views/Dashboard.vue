@@ -4,7 +4,6 @@ import { api, type Filters } from '../api';
 import { useMessage } from 'naive-ui';
 import BreakdownChart from '../components/BreakdownChart.vue';
 import { dayWindow } from '../lib/dayWindow';
-import StatBar from '../components/StatBar.vue';
 import SummaryKpi from '../components/SummaryKpi.vue';
 import PivotTable from '../components/PivotTable.vue';
 import StatSummaryChart from '../components/StatSummaryChart.vue';
@@ -125,7 +124,6 @@ onMounted(async () => {
 		<template v-if="view === 'charts'">
 			<SummaryKpi :filters="filters" />
 			<StatSummaryChart :filters="filters" />
-			<StatBar :filters="filters" :dims="DIMS" default-dim="loss_zone" />
 
 			<n-grid :cols="2" :x-gap="16" responsive="screen" item-responsive>
 				<n-gi span="2 m:1">
