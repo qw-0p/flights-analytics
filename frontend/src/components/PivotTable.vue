@@ -156,6 +156,12 @@ const columns = computed(() => [
 		),
 	),
 ]);
+
+const scrollX = computed(() => {
+	const metricCols = 4 + zones.value.length + reasons.value.length;
+	return 210 + metricCols * 120;
+});
+const maxHeight = 'calc(100vh - 230px)';
 </script>
 
 <template>
@@ -164,8 +170,9 @@ const columns = computed(() => [
 		:data="days"
 		:loading="loading"
 		:summary="() => summaryRow"
+		:scroll-x="scrollX"
+		:max-height="maxHeight"
 		size="small"
-		:scroll-x="1800"
 		:bordered="true"
 		:single-line="false"
 	/>
