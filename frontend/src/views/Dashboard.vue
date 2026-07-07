@@ -134,7 +134,7 @@ onMounted(async () => {
 						:filters="filters"
 						:dims="DIMS"
 						default-dim="loss_zone"
-						:exclude="[...RESULTS, 'Засідка успішна', 'Розвідка успішна']"
+						:exclude="[...RESULTS, 'Засідка успішно', 'Розвідка успішно']"
 					/>
 				</n-gi>
 				<n-gi span="2 m:1">
