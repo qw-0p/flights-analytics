@@ -16,15 +16,15 @@ const cards = () => [
 	{ label: 'Вильоти', value: s.value.flights ?? 0 },
 	{
 		label: 'Успішні',
-		value: `${s.value.hits ?? 0} (${pct(s.value.hits, s.value.flights)}%)`,
+		value: s.value.hits ?? 0,
 	},
 	{
 		label: 'Неуспішні',
-		value: `${s.value.misses ?? 0} (${pct(s.value.misses, s.value.flights)}%)`,
+		value: s.value.misses ?? 0,
 	},
 	{
 		label: 'День',
-		value: `${s.value.day ?? 0} (${pct(s.value.day, s.value.flights)}%)`,
+		value: s.value.day ?? 0,
 	},
 	{
 		label: 'Успішні день',
@@ -40,7 +40,7 @@ const cards = () => [
 	},
 	{
 		label: 'Успішні ніч',
-		value: `${s.value.hits_night ?? 0} (${pct(s.value.hits_night, s.value.flights)}%)`,
+		value: s.value.hits_night ?? 0,
 	},
 	{
 		label: 'Неуспішні ніч',
