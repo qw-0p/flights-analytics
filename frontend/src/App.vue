@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useTheme } from './composables/useTheme'
-import { useAuth } from './composables/useAuth'
-import AppToolbar from './components/AppToolbar.vue'
+import { onMounted } from 'vue';
+import { useTheme } from './composables/useTheme';
+import { useAuth } from './composables/useAuth';
+import AppToolbar from './components/AppToolbar.vue';
 
-const { theme } = useTheme()
-const { check, authed } = useAuth()
+const { theme } = useTheme();
+const { check, authed } = useAuth();
 
-onMounted(check)
+onMounted(check);
 </script>
 
 <template>
