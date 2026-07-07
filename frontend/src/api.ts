@@ -25,9 +25,15 @@ export const api = {
 		http.get('/api/summary', { params: clean(f) }).then(r => r.data),
 	timeseries: (f: Filters) =>
 		http.get('/api/timeseries', { params: clean(f) }).then(r => r.data),
-	breakdown: (dim: string, f: Filters) =>
+	breakdown: (dim: string, f: Filters, exclude: string[] = []) =>
 		http
-			.get('/api/breakdown', { params: { dim, ...clean(f) } })
+			.get('/api/breakdown', {
+				params: {
+					dim,
+					...clean(f),
+					...(exclude.length ? { exclude: exclude.join('|') } : {}),
+				},
+			})
 			.then(r => r.data),
 	records: (f: Filters) =>
 		http.get('/api/records', { params: clean(f) }).then(r => r.data),
@@ -40,8 +46,15 @@ export const api = {
 		http.put(`/api/settings/${key}`, { items }).then(r => r.data),
 	pivot: (f: Filters) =>
 		http.get('/api/pivot', { params: clean(f) }).then(r => r.data),
-	breakdownDesc: (f: Filters) =>
-		http.get('/api/breakdown-desc', { params: clean(f) }).then(r => r.data),
+	breakdownDesc: (f: Filters, exclude: string[] = []) =>
+		http
+			.get('/api/breakdown-desc', {
+				params: {
+					...clean(f),
+					...(exclude.length ? { exclude: exclude.join('|') } : {}),
+				},
+			})
+			.then(r => r.data),
 	setCellColor: (day: string, metric: string, color: string) =>
 		http.put('/api/pivot/color', { day, metric, color }).then(r => r.data),
 };

@@ -6,7 +6,9 @@ import BreakdownChart from '../components/BreakdownChart.vue';
 import { dayWindow } from '../lib/dayWindow';
 import SummaryKpi from '../components/SummaryKpi.vue';
 import PivotTable from '../components/PivotTable.vue';
+import DescChart from '../components/DescChart.vue';
 import StatSummaryChart from '../components/StatSummaryChart.vue';
+import { RESULTS } from '../lib/constants';
 
 const view = ref<'charts' | 'table'>('charts');
 
@@ -132,6 +134,7 @@ onMounted(async () => {
 						:filters="filters"
 						:dims="DIMS"
 						default-dim="loss_zone"
+						:exclude="RESULTS"
 					/>
 				</n-gi>
 				<n-gi span="2 m:1">
@@ -140,6 +143,7 @@ onMounted(async () => {
 						:filters="filters"
 						:dims="DIMS"
 						default-dim="reason"
+						:exclude="['ОК']"
 					/>
 				</n-gi>
 				<n-gi span="2 m:1">
@@ -152,10 +156,11 @@ onMounted(async () => {
 				</n-gi>
 				<n-gi span="2 m:1">
 					<BreakdownChart
-						title="Успіх/Неуспіх"
+						title="Успіх"
 						:filters="filters"
 						:dims="DIMS"
-						default-dim="success"
+						default-dim="result"
+						:exclude="['Неуспішно']"
 					/>
 				</n-gi>
 				<n-gi span="2 m:1">
@@ -174,16 +179,8 @@ onMounted(async () => {
 						default-dim="craftname"
 					/>
 				</n-gi>
-				<n-gi span="2 m:1">
-					<BreakdownChart
-						title="Опис причин"
-						:filters="filters"
-						:dims="DIMS"
-						default-dim="reason_desc"
-						desc-mode
-					/>
-				</n-gi>
 			</n-grid>
+			<DescChart :filters="filters" :exclude="['ОК']" />
 		</template>
 
 		<PivotTable v-else :filters="filters" />

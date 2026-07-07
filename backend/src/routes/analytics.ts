@@ -106,6 +106,7 @@ const DIM_COL: Record<string, { table: 'r' | 'a'; col: string }> = {
 	success: { table: 'r', col: 'success' },
 	loss_zone: { table: 'a', col: 'loss_zone' },
 	reason: { table: 'a', col: 'reason' },
+	result: { table: 'r', col: 'result' },
 };
 
 apiRouter.get('/breakdown', (req, res) => {
@@ -113,6 +114,13 @@ apiRouter.get('/breakdown', (req, res) => {
 	if (!dim) return res.status(400).json({ error: 'bad dim' });
 	const { sql, params } = buildWhere(req.query);
 	const ref = `${dim.table}.${dim.col}`;
+
+	const exclude = String(req.query.exclude ?? '')
+		.split('|')
+		.filter(Boolean);
+	const exSql = exclude.length
+		? ` AND ${ref} NOT IN (${exclude.map(() => '?').join(',')})`
+		: '';
 
 	const total = (
 		db
@@ -128,10 +136,10 @@ apiRouter.get('/breakdown', (req, res) => {
 			`SELECT ${ref} AS label, COUNT(*) AS count
 			 FROM records r
 			 LEFT JOIN annotations a ON a.uuid = r.uuid
-			 ${sql ? sql + ' AND' : 'WHERE'} ${ref} <> ''
+			 ${sql ? sql + ' AND' : 'WHERE'} ${ref} <> ''${exSql}
 			 GROUP BY ${ref} ORDER BY count DESC`,
 		)
-		.all(...params) as { label: string; count: number }[];
+		.all(...params, ...exclude) as { label: string; count: number }[];
 
 	res.json({
 		total,
@@ -244,6 +252,10 @@ apiRouter.put('/pivot/color', (req, res) => {
 
 apiRouter.get('/breakdown-desc', (req, res) => {
 	const { sql, params } = buildWhere(req.query);
+	const exclude = String(req.query.exclude ?? '')
+		.split('|')
+		.filter(Boolean);
+
 	const rows = db
 		.prepare(
 			`SELECT a.reason_desc AS d FROM records r
@@ -259,7 +271,10 @@ apiRouter.get('/breakdown-desc', (req, res) => {
 	const counts = new Map<string, number>();
 	for (const { d } of rows) {
 		try {
-			for (const x of JSON.parse(d)) counts.set(x, (counts.get(x) || 0) + 1);
+			for (const x of JSON.parse(d)) {
+				if (exclude.includes(x)) continue;
+				counts.set(x, (counts.get(x) || 0) + 1);
+			}
 		} catch {}
 	}
 

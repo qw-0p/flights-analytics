@@ -54,12 +54,13 @@ const cards = () => [
 	<n-grid
 		:cols="10"
 		:x-gap="12"
+		:y-gap="12"
 		responsive="screen"
 		item-responsive
 		class="kpi"
 	>
 		<n-gi v-for="c in cards()" :key="c.label" span="10 s:5 m:2 l:1">
-			<n-card size="small">
+			<n-card size="small" class="kpi-card">
 				<n-statistic :label="c.label" :value="c.value" />
 			</n-card>
 		</n-gi>
@@ -69,6 +70,9 @@ const cards = () => [
 <style scoped>
 .kpi {
 	margin-bottom: 16px;
+}
+.kpi-card {
+	height: 100%;
 }
 .hint {
 	display: block;

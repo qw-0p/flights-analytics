@@ -9,6 +9,7 @@ const props = defineProps<{
 	dims: { label: string; value: string }[];
 	defaultDim: string;
 	descMode?: boolean;
+	exclude?: string[];
 }>();
 
 type ChartType = 'bar' | 'pie';
@@ -20,7 +21,7 @@ const total = ref(0);
 async function load() {
 	const data = props.descMode
 		? await api.breakdownDesc(props.filters)
-		: await api.breakdown(dim.value, props.filters);
+		: await api.breakdown(dim.value, props.filters, props.exclude ?? []);
 	rows.value = data.rows;
 	total.value = data.total;
 }
