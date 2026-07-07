@@ -134,7 +134,7 @@ onMounted(async () => {
 						:filters="filters"
 						:dims="DIMS"
 						default-dim="loss_zone"
-						:exclude="RESULTS"
+						:exclude="[...RESULTS]"
 					/>
 				</n-gi>
 				<n-gi span="2 m:1">
