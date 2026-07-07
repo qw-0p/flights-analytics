@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, h, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, h } from 'vue';
 import { NDataTable } from 'naive-ui';
 import { api, type Filters } from '../api';
 
@@ -162,18 +162,27 @@ const scrollX = computed(() => {
 	return 210 + metricCols * 120;
 });
 
-const maxHeight = ref('calc(100vh - 230px)');
+const maxHeight = ref('calc(100vh - 300px)');
 </script>
 
 <template>
-	<n-data-table
-		:columns="columns"
-		:data="days"
-		:loading="loading"
-		:scroll-x="2150"
-		:max-height="maxHeight"
-		size="small"
-		:bordered="true"
-		:single-line="false"
-	/>
+	<div class="page">
+		<n-data-table
+			:columns="columns"
+			:data="days"
+			:loading="loading"
+			:scroll-x="scrollX"
+			:max-height="maxHeight"
+			size="small"
+			:bordered="true"
+			:single-line="false"
+		/>
+	</div>
 </template>
+
+<style scoped>
+.page {
+	padding: 16px;
+	margin: 0 auto;
+}
+</style>

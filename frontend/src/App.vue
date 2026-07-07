@@ -16,7 +16,7 @@ onMounted(check);
 		<n-message-provider>
 			<n-layout class="root">
 				<AppToolbar v-if="authed" />
-				<n-layout-content content-style="padding: 16px">
+				<n-layout-content class="content" :native-scrollbar="false">
 					<router-view />
 				</n-layout-content>
 			</n-layout>
@@ -24,7 +24,10 @@ onMounted(check);
 	</n-config-provider>
 </template>
 <style scoped>
-.root {
-	min-height: 100vh;
+.layout {
+	height: 100vh;
+}
+.content {
+	height: 100%;
 }
 </style>

@@ -182,8 +182,10 @@ onMounted(async () => {
 			</n-grid>
 			<DescChart :filters="filters" :exclude="['ОК']" />
 		</template>
+	</div>
 
-		<PivotTable v-else :filters="filters" />
+	<div v-if="view === 'table'" class="page">
+		<PivotTable :filters="filters" />
 	</div>
 </template>
 
@@ -192,6 +194,9 @@ onMounted(async () => {
 	padding: 0 16px;
 
 	margin: 0 auto;
+}
+.page {
+	padding: 16px;
 }
 .topbar {
 	margin-bottom: 16px;
