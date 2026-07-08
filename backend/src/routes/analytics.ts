@@ -181,22 +181,24 @@ apiRouter.get('/pivot', (req, res) => {
 	const { sql, params } = buildWhere(req.query);
 	const rows = db
 		.prepare(
-			`SELECT r.ts, r.success, r.day_night, a.loss_zone, a.reason
+			`SELECT r.ts, r.success, r.day_night, r.result,
+			        a.loss_zone, a.reason, a.reason_desc
 			 FROM records r
 			 LEFT JOIN annotations a ON a.uuid = r.uuid
 			 ${sql} ORDER BY r.ts`,
 		)
 		.all(...params) as any[];
 
+	const results = new Set<string>();
 	const zones = new Set<string>();
 	const reasons = new Set<string>();
+	const descs = new Set<string>();
 	const days = new Map<string, any>();
 
 	for (const r of rows) {
 		if (r.ts == null) continue;
 		const k = dayKey(Number(r.ts));
 		let d = days.get(k);
-
 		if (!d) {
 			d = {
 				day: k,
@@ -205,14 +207,31 @@ apiRouter.get('/pivot', (req, res) => {
 				misses: 0,
 				day_c: 0,
 				night_c: 0,
+				hits_day: 0,
+				misses_day: 0,
+				hits_night: 0,
+				misses_night: 0,
+				result: {},
 				zone: {},
 				reason: {},
+				desc: {},
 			};
 			days.set(k, d);
 		}
+		const night = r.day_night === 'night';
 		d.flights++;
-		Number(r.success) === 1 ? d.hits++ : d.misses++;
-		r.day_night === 'night' ? d.night_c++ : d.day_c++;
+		if (Number(r.success) === 1) {
+			d.hits++;
+			night ? d.hits_night++ : d.hits_day++;
+		} else {
+			d.misses++;
+			night ? d.misses_night++ : d.misses_day++;
+		}
+		night ? d.night_c++ : d.day_c++;
+		if (r.result) {
+			results.add(r.result);
+			d.result[r.result] = (d.result[r.result] || 0) + 1;
+		}
 		if (r.loss_zone) {
 			zones.add(r.loss_zone);
 			d.zone[r.loss_zone] = (d.zone[r.loss_zone] || 0) + 1;
@@ -221,13 +240,21 @@ apiRouter.get('/pivot', (req, res) => {
 			reasons.add(r.reason);
 			d.reason[r.reason] = (d.reason[r.reason] || 0) + 1;
 		}
+		try {
+			for (const x of JSON.parse(r.reason_desc || '[]')) {
+				descs.add(x);
+				d.desc[x] = (d.desc[x] || 0) + 1;
+			}
+		} catch {}
 	}
 
 	const colors = db.prepare(`SELECT day, metric, color FROM cell_colors`).all();
 
 	res.json({
+		results: [...results],
 		zones: [...zones],
 		reasons: [...reasons],
+		descs: [...descs],
 		days: [...days.values()].sort((a, b) => (a.day < b.day ? 1 : -1)),
 		colors,
 	});
