@@ -139,7 +139,7 @@ const columns = [
 		width: 260,
 		render: cell('reason_desc', true),
 	},
-	{ title: 'Обрив', key: 'break_dist', width: 90, render: numCell },
+	{ title: 'Обрив', key: 'break_dist', width: 140, render: numCell },
 	{ title: 'DVR', key: 'video', width: 120, render: videoCell },
 	{ title: 'Примітка', key: 'note', width: 480, render: noteCell },
 ];
