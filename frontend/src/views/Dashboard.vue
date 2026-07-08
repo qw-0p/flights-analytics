@@ -9,6 +9,7 @@ import PivotTable from '../components/PivotTable.vue';
 import DescChart from '../components/DescChart.vue';
 import StatSummaryChart from '../components/StatSummaryChart.vue';
 import { RESULTS } from '../lib/constants';
+import { rangeShortcuts } from '../lib/dateShortcuts';
 
 const view = ref<'charts' | 'table'>('charts');
 
@@ -90,6 +91,7 @@ onMounted(async () => {
 					type="daterange"
 					clearable
 					class="f-range"
+					:shortcuts="rangeShortcuts"
 				/>
 				<n-select
 					v-model:value="filters.crew"

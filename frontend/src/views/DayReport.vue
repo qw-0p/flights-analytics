@@ -7,6 +7,7 @@ import { useVideoModal } from '../composables/useVideoModal';
 import VideoModal from '../components/VideoModal.vue';
 import { useAuth } from '../composables/useAuth';
 import { ref } from 'vue';
+import { rangeShortcuts } from '../lib/dateShortcuts';
 
 const maxHeight = ref('calc(100vh - 180px)');
 
@@ -14,13 +15,13 @@ const { show } = useVideoModal();
 const { authed, ready, check } = useAuth();
 
 const store = useRecordsStore();
-const { baseDate, rows, opts, loading, window19 } = storeToRefs(store);
+const { range, rows, opts, loading, window19 } = storeToRefs(store);
 
 onMounted(async () => {
 	if (!ready.value) await check();
 	if (authed.value) store.load();
 });
-watch(baseDate, store.load);
+watch(range, store.load);
 
 const toOpts = (a: string[]) => a.map(v => ({ label: v, value: v }));
 
@@ -151,7 +152,12 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '');
 	<div class="page">
 		<n-space align="center" class="header">
 			<h2 class="title">Звіт за добу</h2>
-			<n-date-picker v-model:value="baseDate" type="date" />
+			<n-date-picker
+				v-model:value="range"
+				type="daterange"
+				clearable
+				:shortcuts="rangeShortcuts"
+			/>
 			<n-text depth="3">
 				{{ fmt(window19.from) }} — {{ fmt(window19.to) }}
 			</n-text>

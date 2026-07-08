@@ -13,8 +13,7 @@ const colors = ref<Record<string, string>>({});
 
 async function load() {
 	loading.value = true;
-	const { from, to, ...rest } = props.filters;
-	const data = await api.pivot(rest);
+	const data = await api.pivot(props.filters);
 	zones.value = data.zones;
 	reasons.value = data.reasons;
 	days.value = data.days;
