@@ -13,11 +13,18 @@ const days = ref<any[]>([]);
 const loading = ref(false);
 const colors = ref<Record<string, string>>({});
 
+const FORCE_RESULT = ['Розвідка успішно', 'Засідка успішно'];
+
 async function load() {
 	loading.value = true;
 	const data = await api.pivot(props.filters);
-	results.value = data.results.filter((v: string) => v !== 'Неуспішно');
-	zones.value = data.zones.filter((v: string) => v !== 'ОК');
+	results.value = [
+		...data.results.filter((v: string) => v !== 'Неуспішно'),
+		...FORCE_RESULT.filter(v => data.zones.includes(v)),
+	];
+	zones.value = data.zones.filter(
+		(v: string) => v !== 'ОК' || !FORCE_RESULT.includes(v),
+	);
 	reasons.value = data.reasons.filter((v: string) => v !== 'ОК');
 	descs.value = data.descs.filter((v: string) => v !== 'ОК');
 	days.value = data.days;
