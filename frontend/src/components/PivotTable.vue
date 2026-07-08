@@ -12,18 +12,21 @@ const descs = ref<string[]>([]);
 const days = ref<any[]>([]);
 const loading = ref(false);
 const colors = ref<Record<string, string>>({});
+const forcedResults = ref<string[]>([]);
 
 const FORCE_RESULT = ['Розвідка успішно', 'Засідка успішно'];
 
 async function load() {
 	loading.value = true;
 	const data = await api.pivot(props.filters);
-	results.value = [
-		...data.results.filter((v: string) => v !== 'Неуспішно'),
-		...FORCE_RESULT.filter(v => data.zones.includes(v)),
-	];
+	results.value = data.results.filter(
+		(v: string) => v !== 'Неуспішно' && !FORCE_RESULT.includes(v),
+	);
+	forcedResults.value = data.zones.filter((v: string) =>
+		FORCE_RESULT.includes(v),
+	);
 	zones.value = data.zones.filter(
-		(v: string) => v !== 'ОК' || !FORCE_RESULT.includes(v),
+		(v: string) => !FORCE_RESULT.includes(v) && v !== 'ОК',
 	);
 	reasons.value = data.reasons.filter((v: string) => v !== 'ОК');
 	descs.value = data.descs.filter((v: string) => v !== 'ОК');
@@ -164,6 +167,14 @@ const columns = computed(() => {
 			metric(
 				v,
 				r => r.result[v] || 0,
+				r => r.flights,
+				'grp-result',
+			),
+		),
+		...forcedResults.value.map(v =>
+			metric(
+				v,
+				r => r.zone[v] || 0,
 				r => r.flights,
 				'grp-result',
 			),
